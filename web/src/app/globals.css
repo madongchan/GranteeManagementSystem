@@ -5,16 +5,21 @@
   원본 프로토타입의 CSS 변수를 그대로 가져왔습니다.
   색을 바꾸고 싶으면 여기만 고치면 전체에 반영됩니다.
 */
+/*
+  참여자 화면과 관리자 화면이 같은 팔레트를 씁니다.
+  원본 프로토타입의 색을 그대로 이어받았습니다.
+*/
 :root {
-  --bg: #f6f5f1;
-  --surface: #ffffff;
-  --line: #e4e2da;
-  --line2: #d3d1c7;
-  --text: #2c2c2a;
-  --muted: #73726c;
-  --faint: #9c9a92;
-  --accent: #1d7a5f;
-  --accent-bg: #e1f5ee;
+  --bg: #f6f5f1; /* 페이지 배경 */
+  --surface: #ffffff; /* 카드 */
+  --line: #e4e2da; /* 선 */
+  --line2: #d3d1c7; /* 진한 선 (마우스 올렸을 때) */
+  --text: #2c2c2a; /* 본문 글자 */
+  --muted: #73726c; /* 설명 글자 */
+  --faint: #9c9a92; /* 더 흐린 글자 */
+  --accent: #1d7a5f; /* 초록 포인트 — 버튼·활성 상태 */
+  --accent-dark: #16624b; /* 눌렀을 때 */
+  --accent-bg: #e1f5ee; /* 옅은 초록 배경 */
 }
 
 @theme inline {
@@ -26,6 +31,7 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
   --color-accent-bg: var(--accent-bg);
 }
 

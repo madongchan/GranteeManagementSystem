@@ -1,20 +1,28 @@
 /**
- * 내 신청 내역
+ * 내 신청 내역 — 로그인해야 볼 수 있습니다.
  *
- * 지금은 로그인이 없어서 '햇살지역아동센터'로 로그인한 것으로 가정합니다.
- * (mock-data.ts 의 CURRENT_ACCOUNT_ID)
+ * 로그인 여부를 화면에서 감추는 게 아니라 서버에서 먼저 확인하고
+ * 로그인 안 했으면 아예 화면을 그리지 않습니다.
  */
 import Link from 'next/link'
-import { CURRENT_ACCOUNT_ID, getCall, getMyApplications } from '@/lib/mock-data'
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth'
+import { getCall, getMyApplications } from '@/lib/mock-data'
 import { Empty, PageTitle, Panel, StatusBadge } from '@/components/ui'
 import { participantMessage } from '@/lib/domain/stage'
 
-export default function MyApplicationsPage() {
-  const apps = getMyApplications(CURRENT_ACCOUNT_ID)
+export default async function MyApplicationsPage() {
+  const session = await getSession()
+  if (!session) redirect('/login?error=required')
+
+  const apps = getMyApplications(session.accountId)
 
   return (
-    <>
-      <PageTitle title="내 신청 내역" sub="신청한 사업의 진행 상황을 확인할 수 있습니다." />
+    <div className="max-w-[900px] mx-auto px-6 py-14">
+      <PageTitle
+        title="내 신청 내역"
+        sub={`${session.name} 님이 신청한 사업의 진행 상황입니다.`}
+      />
 
       {apps.length === 0 ? (
         <Panel>
@@ -60,6 +68,6 @@ export default function MyApplicationsPage() {
           })}
         </div>
       )}
-    </>
+    </div>
   )
 }

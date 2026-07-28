@@ -5,8 +5,9 @@
  * 여기에 절대 나오면 안 됩니다.
  */
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { CURRENT_ACCOUNT_ID, getApplication, getCall } from '@/lib/mock-data'
+import { notFound, redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth'
+import { getApplication, getCall } from '@/lib/mock-data'
 import { Field, PageTitle, Panel, StatusBadge } from '@/components/ui'
 import { canSubmitReport, participantMessage, STAGES, stageIndex } from '@/lib/domain/stage'
 import { formatMoney, settlementTotals } from '@/lib/domain/settlement'
@@ -16,19 +17,23 @@ export default async function MyApplicationDetail({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const session = await getSession()
+  if (!session) redirect('/login?error=required')
+
   const { id } = await params
   const app = getApplication(id)
 
   // 남의 신청서는 볼 수 없습니다.
-  // 지금은 화면에서 막지만, DB를 붙이면 서버에서도 막아야 합니다.
-  if (!app || app.accountId !== CURRENT_ACCOUNT_ID) notFound()
+  // 로그인한 사람의 신청서가 아니면 '없는 페이지'로 처리합니다.
+  // (권한 없음이라고 알려주면 "그 번호의 신청서는 존재한다"는 사실이 새어 나갑니다)
+  if (!app || app.accountId !== session.accountId) notFound()
 
   const call = getCall(app.callId)
   const current = stageIndex(app.stage)
   const totals = settlementTotals(app.settlement)
 
   return (
-    <>
+    <div className="max-w-[900px] mx-auto px-6 py-14">
       <Link href="/my" className="text-[13px] text-muted hover:text-text inline-block mb-3">
         ← 내 신청 내역
       </Link>
@@ -153,6 +158,6 @@ export default async function MyApplicationDetail({
           </table>
         </Panel>
       )}
-    </>
+    </div>
   )
 }
