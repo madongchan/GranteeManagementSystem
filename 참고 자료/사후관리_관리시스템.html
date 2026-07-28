@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>함께일하는재단 통합관리시스템</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --surface:#ffffff; --line:#e4e2da; --line2:#d3d1c7;
+    --text:#2c2c2a; --muted:#73726c; --faint:#9c9a92;
+    --accent:#1d7a5f; --accent-bg:#e1f5ee;
+    --t-general:#0f6e56; --t-general-bg:#e1f5ee;
+    --t-intensive:#854f0b; --t-intensive-bg:#faeeda;
+    --t-growth:#993c1d; --t-growth-bg:#faece7;
+    --t-watch:#5f5e5a; --t-watch-bg:#f1efe8;
+    --radius:10px; --radius-sm:7px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.55;font-size:14px;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:14px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+  .head-in{display:flex;align-items:center;gap:24px;height:60px}
+  .logo{font-size:16px;font-weight:600;letter-spacing:-.2px;display:flex;align-items:center;gap:9px}
+  .logo .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+  nav{display:flex;gap:4px;margin-left:auto}
+  .nav-btn{border:none;background:none;color:var(--muted);padding:8px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500}
+  .nav-btn:hover{background:var(--bg)}
+  .nav-btn.active{background:var(--accent-bg);color:var(--accent)}
+
+  main{padding:28px 0 80px}
+  .page-title{font-size:21px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}
+  .page-sub{color:var(--muted);font-size:13.5px;margin-bottom:22px}
+
+  .grid-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+  .metric{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .metric .lbl{font-size:12.5px;color:var(--muted);margin-bottom:7px}
+  .metric .val{font-size:27px;font-weight:600;letter-spacing:-.5px}
+  .metric .val small{font-size:14px;color:var(--faint);font-weight:500;margin-left:3px}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:14px}
+  .panel h3{font-size:14.5px;font-weight:600;margin-bottom:14px}
+
+  .dist-row{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+  .dist-row .name{width:96px;font-size:13px;color:var(--muted);flex-shrink:0}
+  .dist-bar{flex:1;height:22px;background:var(--bg);border-radius:5px;overflow:hidden}
+  .dist-fill{height:100%;border-radius:5px;min-width:2px;transition:width .4s}
+  .dist-row .cnt{width:34px;text-align:right;font-weight:600;font-size:13px}
+  .stage-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+  .stage-stat{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;cursor:pointer}
+  .stage-stat:hover{background:#fbfaf7;border-color:var(--line2)}
+  .stage-stat .ss-num{font-size:24px;font-weight:600;letter-spacing:-.5px}
+  .stage-stat .ss-lbl{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .settle-head,.settle-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.5fr 26px;gap:8px;align-items:center}
+  .settle-head{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .settle-row{margin-bottom:8px}
+  .settle-row input{padding:8px 10px;border:1px solid var(--line2);border-radius:var(--radius-sm);outline:none;width:100%}
+  .settle-row input:focus{border-color:var(--accent)}
+  .settle-del{border:none;background:none;color:var(--faint);font-size:16px;cursor:pointer;border-radius:50%}
+  .settle-del:hover{background:#f0dede;color:#a32d2d}
+  .settle-totals{display:flex;gap:18px;flex-wrap:wrap;background:var(--bg);border-radius:var(--radius-sm);padding:12px 14px;margin-top:4px;font-size:13px;color:var(--muted)}
+  .settle-totals b{color:var(--text);font-weight:600}
+  .file-list{display:flex;flex-direction:column;gap:6px;margin:2px 0 10px}
+  .file-item{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 10px}
+  .file-name{flex:1;font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline;word-break:break-all}
+  .file-size{font-size:12px;color:var(--faint)}
+  .file-del{border:none;background:none;color:var(--faint);font-size:16px;cursor:pointer;border-radius:50%;width:22px;height:22px}
+  .file-del:hover{background:#f0dede;color:#a32d2d}
+  .uploader{display:inline-flex;align-items:center;gap:8px;margin-bottom:6px}
+  .call-image{width:100%;max-height:180px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line);margin-bottom:12px;background:var(--bg)}
+  .call-thumb{width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line);flex-shrink:0;background:var(--bg)}
+  .consent-box{display:flex;flex-direction:column;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px}
+  .consent-row{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer}
+  .consent-row input{width:16px;height:16px;flex-shrink:0}
+  .consent-row .req{color:#a32d2d;font-size:12px}
+  .consent-row .opt{color:var(--faint);font-size:12px}
+  .consent-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .consent-tag{font-size:11.5px;padding:2px 8px;border-radius:5px;background:var(--t-general-bg);color:var(--t-general)}
+  .consent-tag.no{background:var(--bg);color:var(--faint)}
+  .kpi-head,.kpi-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 70px 26px;gap:8px;align-items:center}
+  .kpi-head{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .kpi-row{margin-bottom:8px}
+  .kpi-row input{padding:8px 10px;border:1px solid var(--line2);border-radius:var(--radius-sm);outline:none;width:100%}
+  .kpi-rate{font-size:13px;font-weight:600;text-align:center}
+  .timeline{display:flex;flex-direction:column;gap:0;margin:6px 0 10px}
+  .tl-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .tl-item:last-child{border-bottom:none}
+  .tl-date{font-size:12px;color:var(--muted);width:84px;flex-shrink:0}
+  .tl-type{font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:5px;background:var(--accent-bg);color:var(--accent);height:fit-content}
+  .tl-note{flex:1;font-size:13px}
+  .tl-del{border:none;background:none;color:var(--faint);cursor:pointer;font-size:14px}
+  .flag-warn{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:#faece7;color:#a32d2d}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+  .search{flex:1;min-width:200px;position:relative}
+  .search input{width:100%;height:38px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--radius-sm);background:var(--surface);outline:none}
+  .search input:focus{border-color:var(--accent)}
+  .filter-sel{height:38px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none}
+
+  .btn{height:38px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-weight:500;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:var(--bg)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#176a52}
+  .btn.danger{color:#a32d2d;border-color:#e9c5c5}
+  .btn.danger:hover{background:#fceaea}
+  .btn.sm{height:30px;padding:0 11px;font-size:12.5px}
+
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  thead th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:11px 16px;border-bottom:1px solid var(--line);background:#fbfaf7}
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--line);font-size:13.5px}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#fbfaf7}
+  .empty{text-align:center;color:var(--faint);padding:42px 0}
+
+  .badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .b-general{background:var(--t-general-bg);color:var(--t-general)}
+  .b-intensive{background:var(--t-intensive-bg);color:var(--t-intensive)}
+  .b-growth{background:var(--t-growth-bg);color:var(--t-growth)}
+  .b-watch{background:var(--t-watch-bg);color:var(--t-watch)}
+  .stage-tag{font-size:12px;color:var(--muted);background:var(--bg);padding:3px 9px;border-radius:5px}
+  .kind-tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px}
+  .kind-org{background:#e6f1fb;color:#185fa5}
+  .kind-ind{background:#eeedfe;color:#534ab7}
+
+  .detail-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px}
+  .avatar{width:46px;height:46px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;flex-shrink:0}
+  .detail-head .nm{font-size:18px;font-weight:600;letter-spacing:-.2px}
+  .detail-head .meta{color:var(--muted);font-size:13px;margin-top:1px}
+  .detail-head .badges{margin-left:auto;display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+  .id-line{font-size:12px;color:var(--faint);margin:6px 0 0 60px}
+
+  .stage-bar{display:flex;gap:6px;margin:20px 0 18px}
+  .stage-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:9px 2px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface)}
+  .stage-step:hover{background:var(--bg)}
+  .stage-step.on{border-color:var(--accent);background:var(--accent-bg)}
+  .stage-step .num{width:23px;height:23px;border-radius:50%;background:var(--bg);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .stage-step.on .num{background:var(--accent);color:#fff}
+  .stage-step .stp-lbl{font-size:12.5px;font-weight:500;color:var(--muted)}
+  .stage-step.on .stp-lbl{color:var(--accent)}
+  .stage-step.done .num{background:var(--t-general-bg);color:var(--t-general)}
+
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--line2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .field textarea{resize:vertical;min-height:62px;line-height:1.5}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+  .segmented{display:inline-flex;border:1px solid var(--line2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:18px}
+  .segmented button{border:none;background:var(--surface);color:var(--muted);padding:9px 20px;font-size:13.5px;font-weight:500}
+  .segmented button.on{background:var(--accent);color:#fff}
+  .segmented button+button{border-left:1px solid var(--line2)}
+
+  .diag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .diag-item label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:5px}
+  .diag-item select{width:100%;padding:8px 10px;border:1px solid var(--line2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text)}
+
+  .class-result{background:var(--bg);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:16px}
+  .class-result .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .class-result .axis{font-size:13px;color:var(--muted)}
+  .class-result .axis b{color:var(--text);font-weight:600}
+  .class-note{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.6}
+
+  .save-bar{display:flex;gap:10px;align-items:center;margin-top:8px}
+  .saved-msg{color:var(--accent);font-size:13px;font-weight:500;opacity:0;transition:opacity .3s}
+  .saved-msg.show{opacity:1}
+  .back-link{border:none;background:none;color:var(--muted);font-size:13px;font-weight:500;padding:0;margin-bottom:14px;display:inline-flex;align-items:center;gap:5px}
+  .back-link:hover{color:var(--text)}
+  .hint{font-size:12.5px;color:var(--faint);margin-top:-8px;margin-bottom:16px}
+
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:5px 6px 5px 13px;font-size:13px}
+  .chip button{border:none;background:none;color:var(--faint);font-size:15px;line-height:1;width:20px;height:20px;border-radius:50%}
+  .chip button:hover{background:#f0dede;color:#a32d2d}
+  .add-row{display:flex;gap:8px}
+  .add-row input{flex:1;height:38px;padding:0 12px;border:1px solid var(--line2);border-radius:var(--radius-sm);outline:none}
+  .add-row input:focus{border-color:var(--accent)}
+  @media(max-width:620px){.field-row,.field-row-3{grid-template-columns:1fr}.stage-step .stp-lbl{display:none}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<header id="appHeader">
+  <div class="wrap head-in">
+    <div class="logo"><span class="dot"></span>함께일하는재단 통합관리시스템</div>
+    <nav>
+      <button class="nav-btn active" data-view="dashboard" onclick="go('dashboard')">대시보드</button>
+      <button class="nav-btn" data-view="list" onclick="go('list')">참여자 목록</button>
+      <button class="nav-btn" data-view="calls" onclick="go('calls')">공모사업</button>
+      <button class="nav-btn" data-view="stats" onclick="go('stats')">통계</button>
+      <button class="nav-btn" data-view="new" onclick="go('new')">신규 등록</button>
+      <button class="nav-btn" data-view="admin" onclick="go('admin')">관리자</button>
+    </nav>
+    <button class="nav-btn" onclick="logout()" style="color:var(--faint)">로그아웃</button>
+  </div>
+</header>
+<main><div class="wrap" id="root"></div></main>
+<footer style="border-top:1px solid var(--line);margin-top:8px;padding:24px 20px 44px;text-align:center">
+  <div style="display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:12.5px;font-weight:500;margin-bottom:6px">
+    <span style="width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block"></span>함께일하는재단 통합관리시스템
+  </div>
+  <div style="color:var(--faint);font-size:11.5px;letter-spacing:.2px">© 2026 임지연 연구소 · All rights reserved.</div>
+  <div style="color:var(--faint);font-size:11px;margin-top:3px">본 시스템에 대한 모든 저작권은 임지연 연구소에 귀속됩니다.</div>
+</footer>
+
+<script>
+const STAGES = ["신청","심사","사업진행","종료","사후관리"];
+const AXES = [
+  {k:"accounting",  label:"회계·행정 역량"},
+  {k:"execution",   label:"사업수행 역량"},
+  {k:"outcome",     label:"성과 달성도"},
+  {k:"sustainability", label:"자립 가능성"},
+  {k:"linkage",     label:"재단 연계 관심"},
+];
+const SCORE_OPT = {1:"미흡",2:"보통",3:"우수"};
+const CLASS_META = {
+  "성장연계":{cls:"b-growth", color:"--t-growth"},
+  "집중관리":{cls:"b-intensive", color:"--t-intensive"},
+  "일반 모니터링":{cls:"b-general", color:"--t-general"},
+  "관찰":{cls:"b-watch", color:"--t-watch"},
+  "미분류":{cls:"b-watch", color:"--t-watch"},
+};
+const REGION = {
+  "서울특별시":["종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구","노원구","은평구","서대문구","마포구","양천구","강서구","구로구","금천구","영등포구","동작구","관악구","서초구","강남구","송파구","강동구"],
+  "부산광역시":["중구","서구","동구","영도구","부산진구","동래구","남구","북구","해운대구","사하구","금정구","강서구","연제구","수영구","사상구","기장군"],
+  "대구광역시":["중구","동구","서구","남구","북구","수성구","달서구","달성군","군위군"],
+  "인천광역시":["중구","동구","미추홀구","연수구","남동구","부평구","계양구","서구","강화군","옹진군"],
+  "광주광역시":["동구","서구","남구","북구","광산구"],
+  "대전광역시":["동구","중구","서구","유성구","대덕구"],
+  "울산광역시":["중구","남구","동구","북구","울주군"],
+  "세종특별자치시":["세종시"],
+  "경기도":["수원시","성남시","의정부시","안양시","부천시","광명시","평택시","동두천시","안산시","고양시","과천시","구리시","남양주시","오산시","시흥시","군포시","의왕시","하남시","용인시","파주시","이천시","안성시","김포시","화성시","광주시","양주시","포천시","여주시","연천군","가평군","양평군"],
+  "강원특별자치도":["춘천시","원주시","강릉시","동해시","태백시","속초시","삼척시","홍천군","횡성군","영월군","평창군","정선군","철원군","화천군","양구군","인제군","고성군","양양군"],
+  "충청북도":["청주시","충주시","제천시","보은군","옥천군","영동군","증평군","진천군","괴산군","음성군","단양군"],
+  "충청남도":["천안시","공주시","보령시","아산시","서산시","논산시","계룡시","당진시","금산군","부여군","서천군","청양군","홍성군","예산군","태안군"],
+  "전북특별자치도":["전주시","군산시","익산시","정읍시","남원시","김제시","완주군","진안군","무주군","장수군","임실군","순창군","고창군","부안군"],
+  "전라남도":["목포시","여수시","순천시","나주시","광양시","담양군","곡성군","구례군","고흥군","보성군","화순군","장흥군","강진군","해남군","영암군","무안군","함평군","영광군","장성군","완도군","진도군","신안군"],
+  "경상북도":["포항시","경주시","김천시","안동시","구미시","영주시","영천시","상주시","문경시","경산시","의성군","청송군","영양군","영덕군","청도군","고령군","성주군","칠곡군","예천군","봉화군","울진군","울릉군"],
+  "경상남도":["창원시","진주시","통영시","사천시","김해시","밀양시","거제시","양산시","의령군","함안군","창녕군","고성군","남해군","하동군","산청군","함양군","거창군","합천군"],
+  "제주특별자치도":["제주시","서귀포시"],
+};
+
+const KEY = "fnd_postmgmt_v2";
+const ADMIN_ID = "dlawldus", ADMIN_PW = "dlawldus2026";
+const SYS_ID = "hamkke", SYS_PW = "hamkke2026";
+let state = { mode:null, view:"dashboard", orgs:[], calls:[], accounts:[], settings:{programs:[],orgTypes:[]}, activeId:null, activeStage:0, query:"", filter:"all", kindFilter:"all", stageFilter:"all", consentFilter:"all", newKind:"org", partAuth:false, adminAuth:false, currentAccountId:null, partView:"calls", authView:"login", signupKind:"org", applyCallId:null, applyKind:"org", applyFiles:[], partDone:null, callEdit:null };
+
+function defaultSettings(){ return {
+  programs:["모두의공모 2024","모두의공모 2025"],
+  orgTypes:["지역아동센터","사회복지기관","비영리민간단체","사회적기업","협동조합","마을공동체","기타"],
+  managers:["이채림"],
+}; }
+
+const CONSENTS=[
+  {k:"collect", label:"개인정보 수집·이용", required:true},
+  {k:"thirdParty", label:"제3자 제공"},
+  {k:"research", label:"연구·정책개선 목적 활용"},
+  {k:"followup", label:"후속지원 프로그램 안내 수신"},
+  {k:"survey", label:"만족도·성과추적 조사 참여"},
+];
+const CONSENT_VERSION="1.0";
+const AGE_BANDS=["10대","20대","30대","40대","50대","60대 이상"];
+const SCALE_BANDS=["연 1억 미만","1~5억","5~10억","10억 이상"];
+const SETTLE_EVAL=[
+  {k:"schedule", label:"정산 일정 준수", opts:["기간 내 진행","1~2회 독촉 후 진행","3회 이상 독촉 후 진행"]},
+  {k:"faithfulness", label:"정산 충실도", opts:["충실히 진행","추가 요청 후 진행","진행이 미흡"]},
+  {k:"communication", label:"소통 원활성", opts:["매우 원활","비교적 원활","어려움 있음"]},
+];
+function settleEval(o){ return (o.settlement&&o.settlement.eval)||{}; }
+function settlePoor(o){ const e=settleEval(o); return SETTLE_EVAL.some(x=> e[x.k] && e[x.k]===x.opts[2]); }
+function blankConsents(){ return {collect:false,thirdParty:false,research:false,followup:false,survey:false,agreedAt:"",version:CONSENT_VERSION}; }
+
+async function loadStore(){
+  try{ if(window.storage){ const r=await window.storage.get(KEY); return (r&&r.value)?JSON.parse(r.value):null; } }catch(e){}
+  try{ const ls=localStorage.getItem(KEY); if(ls) return JSON.parse(ls); }catch(e){}
+  return null;
+}
+async function saveStore(){
+  const payload=JSON.stringify({orgs:state.orgs,settings:state.settings,calls:state.calls,accounts:state.accounts});
+  let ok=false;
+  try{ if(window.storage){ await window.storage.set(KEY,payload); ok=true; } }catch(e){}
+  if(!ok){ try{ localStorage.setItem(KEY,payload); }catch(e){} }
+}
+
+const MAX_FILE=3*1024*1024; // 3MB
+async function putFile(dataUrl){
+  const key="file_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  try{ if(window.storage){ await window.storage.set("FILE:"+key,dataUrl); return key; } }catch(e){}
+  try{ localStorage.setItem("FILE:"+key,dataUrl); return key; }catch(e){ return null; }
+}
+async function getFile(key){
+  try{ if(window.storage){ const r=await window.storage.get("FILE:"+key); return (r&&r.value)?r.value:null; } }catch(e){}
+  try{ return localStorage.getItem("FILE:"+key); }catch(e){ return null; }
+}
+async function delFile(key){
+  try{ if(window.storage){ await window.storage.delete("FILE:"+key); } }catch(e){}
+  try{ localStorage.removeItem("FILE:"+key); }catch(e){}
+}
+function readFileAsDataUrl(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+function collectFileKeys(){
+  const keys=new Set();
+  state.orgs.forEach(o=>{ (o.attachments||[]).forEach(f=>f&&f.key&&keys.add(f.key)); (o.resultFiles||[]).forEach(f=>f&&f.key&&keys.add(f.key)); });
+  state.calls.forEach(c=>{ if(c.image&&c.image.key)keys.add(c.image.key); });
+  return [...keys];
+}
+async function exportBackup(){
+  const files={};
+  for(const k of collectFileKeys()){ try{ const d=await getFile(k); if(d)files[k]=d; }catch(e){} }
+  const payload={ app:"hamkke-fnd", version:2, exportedAt:new Date().toISOString(),
+    data:{orgs:state.orgs,settings:state.settings,calls:state.calls,accounts:state.accounts}, files };
+  const blob=new Blob([JSON.stringify(payload)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="함께일하는재단_전체백업_"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function importBackup(input){
+  const f=input.files&&input.files[0]; if(input)input.value=""; if(!f)return;
+  if(!confirm("전체 백업 파일로 복원하면 현재 데이터가 모두 교체됩니다. 계속할까요?")) return;
+  try{
+    const text=await f.text(); const p=JSON.parse(text);
+    if(!p||!p.data){ alert("올바른 전체 백업 파일이 아닙니다."); return; }
+    if(p.files){ for(const k of Object.keys(p.files)){ try{ if(window.storage){ await window.storage.set("FILE:"+k,p.files[k]); } else { localStorage.setItem("FILE:"+k,p.files[k]); } }catch(e){ try{ localStorage.setItem("FILE:"+k,p.files[k]); }catch(_){} } } }
+    state.orgs=p.data.orgs||[]; state.settings=Object.assign(defaultSettings(),p.data.settings||{}); state.calls=p.data.calls||[]; state.accounts=p.data.accounts||[];
+    await saveStore();
+    alert("전체 복원이 완료되었습니다. (참여자 "+state.orgs.length+"건)");
+    state.view="dashboard"; render();
+  }catch(e){ alert("복원 중 오류가 발생했습니다: "+e.message); }
+}
+async function openFile(key,name){ const d=await getFile(key); if(!d){ alert("파일을 찾을 수 없습니다. (다른 브라우저/기기에서는 보이지 않습니다)"); return; }
+  const a=document.createElement("a"); a.href=d; a.download=name||"download"; a.target="_blank"; document.body.appendChild(a); a.click(); a.remove(); }
+async function hydrateFiles(){
+  const imgs=document.querySelectorAll("img[data-filekey]");
+  for(const el of imgs){ if(el.dataset.loaded)continue; const d=await getFile(el.dataset.filekey); if(d){ el.src=d; el.dataset.loaded="1"; } }
+}
+// 첨부 목록 렌더 + 업로드/삭제
+function fileListHtml(arr,removeFn){
+  if(!arr||!arr.length) return `<div class="hint" style="margin:2px 0 8px">첨부된 파일이 없습니다.</div>`;
+  return `<div class="file-list">`+arr.map((f,i)=>`<div class="file-item">
+    <span class="file-name" onclick="openFile('${f.key}','${esc(f.name)}')" title="열기/다운로드">${esc(f.name)}</span>
+    <span class="file-size">${f.size?Math.round(f.size/1024)+"KB":""}</span>
+    ${removeFn?`<button class="file-del" onclick="${removeFn}(${i})" title="삭제">×</button>`:""}</div>`).join("")+`</div>`;
+}
+
+function uid(){ return "FND-"+new Date().getFullYear()+"-"+Math.floor(1000+Math.random()*9000); }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function initials(nm){ return (nm||"").trim().slice(0,2) || "??"; }
+function regionStr(o){ return [o.sido,o.sigungu].filter(Boolean).join(" ")||""; }
+
+function blankOrg(kind){
+  return { id:uid(), kind:kind||"org", name:"", type:"", affiliation:"", founded:"", rep:"", contact:"",
+    sido:"", sigungu:"", program:"", callId:"", accountId:"", fromParticipant:false, stage:0,
+    ageBand:"", scale:"", consents:blankConsents(), manager:"",
+    apply:{motive:"",budget:""}, review:{doc:"",interview:"",result:"",opinion:""},
+    progress:{mentoring:"",inspection:"",issue:"",exec:""}, closing:{report:false,performance:""},
+    scores:{accounting:0,execution:0,outcome:0,sustainability:0,linkage:0},
+    followup:{manual:"",support:"",linkage:"",next:""},
+    settlement:{status:"미정산",items:[],note:"",eval:{schedule:"",faithfulness:"",communication:"",note:""}},
+    kpis:[], activities:[], reportStatus:"", reportRejectReason:"",
+    attachments:[], resultFiles:[],
+    createdAt:new Date().toISOString().slice(0,10) };
+}
+function uidCall(){ return "CALL-"+Date.now().toString().slice(-6); }
+function newCall(){ return { id:uidCall(), title:"", desc:"", target:"둘 다", start:"", end:"", budget:"", capacity:"", status:"모집중", image:null, createdAt:new Date().toISOString().slice(0,10) }; }
+function callTitles(){ return state.calls.map(c=>c.title).filter(Boolean); }
+function callOpen(c){ const t=new Date().toISOString().slice(0,10); return c.status==="모집중" && (!c.end || c.end>=t); }
+function createApplication(call, f){
+  const o=blankOrg(f.kind);
+  o.name=f.name; o.contact=f.contact; o.sido=f.sido; o.sigungu=f.sigungu;
+  o.program=call.title; o.callId=call.id; o.fromParticipant=true; o.stage=0;
+  if(f.kind==="individual"){ o.affiliation=f.affiliation||""; }
+  else { o.type=f.type||""; o.founded=f.founded||""; o.rep=f.rep||""; }
+  o.apply.motive=f.motive||""; o.apply.budget=f.budget||"";
+  o.ageBand=f.ageBand||""; o.scale=f.scale||"";
+  if(f.consents) o.consents=Object.assign(blankConsents(), f.consents);
+  return o;
+}
+
+function computeClass(o){
+  const s=o.scores; const filled=AXES.every(a=>s[a.k]>0);
+  if(!filled) return {label:"미분류", stability:null, potential:null, filled:false};
+  const stability=s.accounting+s.sustainability, potential=s.execution+s.outcome+s.linkage;
+  const stHigh=stability>=5, potHigh=potential>=7;
+  let label = stHigh&&potHigh?"성장연계" : !stHigh&&potHigh?"집중관리" : stHigh&&!potHigh?"일반 모니터링" : "관찰";
+  return {label, stability, potential, filled:true};
+}
+function effectiveClass(o){ return (o.followup&&o.followup.manual)?o.followup.manual:computeClass(o).label; }
+function classBadge(label){ const m=CLASS_META[label]||CLASS_META["미분류"]; return `<span class="badge ${m.cls}">${label}</span>`; }
+function kindTag(k){ return k==="individual"?`<span class="kind-tag kind-ind">개인</span>`:`<span class="kind-tag kind-org">기관·기업</span>`; }
+function consentTags(o){
+  const c=o.consents||{};
+  return `<div class="consent-tags">`+CONSENTS.map(x=>`<span class="consent-tag ${c[x.k]?'':'no'}">${x.label} ${c[x.k]?'✓':'✕'}</span>`).join("")+`</div>`;
+}
+function demographicField(o){
+  if(o.kind==="individual") return `<div class="field"><label>연령대</label><select id="d_age"><option value="">선택</option>${AGE_BANDS.map(a=>`<option ${o.ageBand===a?"selected":""}>${a}</option>`).join("")}</select></div>`;
+  return `<div class="field"><label>규모(연 매출·예산)</label><select id="d_scale"><option value="">선택</option>${SCALE_BANDS.map(a=>`<option ${o.scale===a?"selected":""}>${a}</option>`).join("")}</select></div>`;
+}
+function kpiPanel(o,mode){
+  if(!o.kpis)o.kpis=[];
+  const rows=o.kpis.map((k,i)=>{
+    const rate=(num(k.target)>0&&String(k.actual)!=="")?Math.round(num(k.actual)/num(k.target)*100)+"%":"-";
+    return `<div class="kpi-row">
+      <input id="kp_name_${i}" value="${esc(k.name||"")}" placeholder="지표명" oninput="kpiSync()">
+      <input id="kp_target_${i}" value="${esc(k.target||"")}" placeholder="목표" inputmode="numeric" oninput="kpiSync()">
+      <input id="kp_actual_${i}" value="${esc(k.actual||"")}" placeholder="실적" inputmode="numeric" oninput="kpiSync()" ${mode==='target'?'style="background:var(--bg)"':''}>
+      <span class="kpi-rate" id="kp_rate_${i}">${rate}</span>
+      <button class="settle-del" onclick="removeKpi(${i})">×</button></div>`;
+  }).join("");
+  return `<h3 style="margin:20px 0 4px;font-size:14px">성과지표 ${mode==='target'?'(목표 설정)':'(실적 입력)'}</h3>
+    <div class="hint">신청 단계에서 목표를, 종료 단계에서 실적을 넣으면 달성률이 계산됩니다.</div>
+    ${o.kpis.length?`<div class="kpi-head"><span>지표</span><span>목표</span><span>실적</span><span style="text-align:center">달성률</span><span></span></div>`:""}
+    <div id="kpiRows">${rows}</div>
+    <button class="btn sm" onclick="addKpi()" style="margin:4px 0 4px">+ 지표 추가</button>`;
+}
+function kpiSync(){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o||!o.kpis)return;
+  o.kpis.forEach((k,i)=>{ const g=id=>{const e=document.getElementById(id);return e?e.value:undefined;};
+    const n=g("kp_name_"+i),t=g("kp_target_"+i),a=g("kp_actual_"+i);
+    if(n!==undefined)k.name=n; if(t!==undefined)k.target=t; if(a!==undefined)k.actual=a;
+    const rel=document.getElementById("kp_rate_"+i); if(rel)rel.textContent=(num(k.target)>0&&String(k.actual)!=="")?Math.round(num(k.actual)/num(k.target)*100)+"%":"-";
+  });
+}
+function addKpi(){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return; if(!o.kpis)o.kpis=[]; kpiSync(); o.kpis.push({name:"",target:"",actual:""}); render(); }
+function removeKpi(i){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o||!o.kpis)return; kpiSync(); o.kpis.splice(i,1); render(); }
+function activityPanel(o){
+  if(!o.activities)o.activities=[];
+  const list=o.activities.map((a,i)=>({a,i})).sort((x,y)=>x.a.date<y.a.date?1:-1).map(({a,i})=>
+    `<div class="tl-item"><span class="tl-date">${esc(a.date||"-")}</span><span class="tl-type">${esc(a.type||"메모")}</span><span class="tl-note">${esc(a.note||"")}</span><button class="tl-del" onclick="removeActivity(${i})">×</button></div>`).join("");
+  return `<h3 style="margin:20px 0 6px;font-size:14px">활동 타임라인</h3>
+    ${o.activities.length?`<div class="timeline">${list}</div>`:`<div class="hint" style="margin:0 0 8px">기록된 활동이 없습니다.</div>`}
+    <div class="field-row-3" style="gap:8px;align-items:flex-end">
+      <div class="field" style="margin:0"><label>날짜</label><input type="date" id="act_date"></div>
+      <div class="field" style="margin:0"><label>유형</label><select id="act_type">${["상담","연락","방문","안내","기타"].map(x=>`<option>${x}</option>`).join("")}</select></div>
+      <div class="field" style="margin:0"><label>내용</label><input id="act_note" placeholder="예: 회계교육 안내"></div>
+    </div>
+    <button class="btn sm" onclick="addActivity()" style="margin-top:8px">+ 활동 추가</button>`;
+}
+function addActivity(){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return; if(!o.activities)o.activities=[];
+  const g=id=>{const e=document.getElementById(id);return e?e.value:"";};
+  const note=g("act_note").trim(); if(!note){ alert("활동 내용을 입력하세요."); return; }
+  o.activities.push({date:g("act_date")||new Date().toISOString().slice(0,10), type:g("act_type")||"메모", note});
+  saveStore().then(render);
+}
+function removeActivity(i){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o||!o.activities)return; o.activities.splice(i,1); saveStore().then(render); }
+function approveReport(){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return; o.reportStatus="approved"; o.reportRejectReason=""; saveStore().then(render); }
+function rejectReport(){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return; const r=prompt("반려 사유를 입력하세요:"); if(r===null)return; o.reportStatus="rejected"; o.reportRejectReason=r; saveStore().then(render); }
+
+function go(view){ state.view=view; if(view!=="detail")state.activeId=null; render(); }
+function openOrg(id){ const o=state.orgs.find(x=>x.id===id); state.activeId=id; state.activeStage=o?o.stage:0; state.view="detail"; render(); }
+function goStage(i){ state.stageFilter=String(i); state.kindFilter="all"; state.filter="all"; state.query=""; state.view="list"; render(); }
+
+function render(){
+  const header=document.getElementById("appHeader");
+  const root=document.getElementById("root");
+  if(!state.partAuth && !state.adminAuth){ if(header)header.style.display="none"; root.innerHTML=(state.authView==="signup"?viewSignup():viewLogin()); return; }
+  if(state.partAuth){
+    if(header)header.style.display="none";
+    const pv=state.partView;
+    root.innerHTML = pv==="apply"?viewApply() : pv==="myapps"?viewMyApps() : pv==="appdetail"?viewMyAppDetail() : pv==="profile"?viewMyProfile() : viewPartCalls();
+    hydrateFiles();
+    return;
+  }
+  // 관리자 모드
+  if(header)header.style.display="";
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.view===state.view || (state.view==="detail"&&b.dataset.view==="list")));
+  const v=state.view;
+  root.innerHTML = v==="dashboard"?viewDashboard() : v==="list"?viewList() : v==="new"?viewNew() : v==="calls"?viewCalls() : v==="stats"?viewStats() : v==="admin"?viewAdmin() : viewDetail();
+  hydrateFiles();
+}
+
+function selOpts(list,val){ let arr=(list||[]).slice(); if(val&&!arr.includes(val))arr.unshift(val); return `<option value="">선택</option>`+arr.map(x=>`<option ${x===val?"selected":""}>${esc(x)}</option>`).join(""); }
+
+function regionSelects(sidoId,guId,sidoVal,guVal){
+  const sidos=Object.keys(REGION), guList=REGION[sidoVal]||[];
+  return `<div class="field-row">
+    <div class="field"><label>지역 — 시/도</label><select id="${sidoId}" onchange="onSido('${sidoId}','${guId}')">
+      <option value="">선택</option>${sidos.map(s=>`<option ${s===sidoVal?"selected":""}>${s}</option>`).join("")}</select></div>
+    <div class="field"><label>지역 — 시/군/구</label><select id="${guId}">
+      <option value="">선택</option>${guList.map(g=>`<option ${g===guVal?"selected":""}>${g}</option>`).join("")}</select></div>
+  </div>`;
+}
+function onSido(sidoId,guId){
+  const sido=document.getElementById(sidoId).value, gu=document.getElementById(guId);
+  const list=REGION[sido]||[];
+  gu.innerHTML=`<option value="">선택</option>`+list.map(g=>`<option>${g}</option>`).join("");
+}
+
+function viewDashboard(){
+  const orgs=state.orgs;
+  const counts={"성장연계":0,"집중관리":0,"일반 모니터링":0,"관찰":0,"미분류":0};
+  orgs.forEach(o=>{ counts[effectiveClass(o)]++; });
+  const total=orgs.length;
+  const orgN=orgs.filter(o=>o.kind!=="individual").length, indN=orgs.filter(o=>o.kind==="individual").length;
+  const today=new Date().toISOString().slice(0,10);
+  const upcoming=orgs.filter(o=>o.followup&&o.followup.next&&o.followup.next>=today).length;
+  const overdue=orgs.filter(o=>o.followup&&o.followup.next&&o.followup.next<today).sort((a,b)=>a.followup.next<b.followup.next?-1:1);
+  const settleWait=orgs.filter(o=>o.stage>=3 && (!o.settlement || o.settlement.status!=="정산완료")).length;
+  const max=Math.max(1,...Object.values(counts));
+  const distRow=(name)=>{ const c=counts[name]||0,m=CLASS_META[name];
+    return `<div class="dist-row"><span class="name">${name}</span>
+      <div class="dist-bar"><div class="dist-fill" style="width:${Math.round(c/max*100)}%;background:var(${m.color})"></div></div>
+      <span class="cnt">${c}</span></div>`; };
+  const pending=orgs.filter(o=>o.fromParticipant && o.stage===0);
+  return `
+  <div class="page-title">대시보드</div>
+  <div class="page-sub">전체 참여자 현황과 후속관리 우선순위를 한눈에 봅니다.</div>
+  <div class="grid-metrics">
+    <div class="metric"><div class="lbl">전체 참여자</div><div class="val">${total}<small>건</small></div></div>
+    <div class="metric"><div class="lbl">기관·기업</div><div class="val">${orgN}<small>곳</small></div></div>
+    <div class="metric"><div class="lbl">개인 참여자</div><div class="val">${indN}<small>명</small></div></div>
+    <div class="metric"><div class="lbl">검토 대기 신청</div><div class="val">${pending.length}<small>건</small></div></div>
+    <div class="metric"><div class="lbl">지연된 후속관리</div><div class="val" style="${overdue.length?'color:#a32d2d':''}">${overdue.length}<small>건</small></div></div>
+    <div class="metric"><div class="lbl">정산 대기</div><div class="val">${settleWait}<small>건</small></div></div>
+    <div class="metric"><div class="lbl">접촉 예정</div><div class="val">${upcoming}<small>건</small></div></div>
+  </div>
+  ${overdue.length?`<div class="panel"><h3 style="color:#a32d2d">지연된 후속관리 (${overdue.length})</h3>
+    <div class="hint" style="margin:-6px 0 12px">접촉 예정일이 지났습니다. 먼저 처리하는 것이 좋습니다.</div>
+    ${overdue.map(o=>`<div class="dist-row" style="cursor:pointer" onclick="openOrg('${o.id}')">
+        <span style="flex:1;font-weight:500">${esc(o.name||"(이름없음)")}</span>${kindTag(o.kind)}${classBadge(effectiveClass(o))}
+        <span class="stage-tag" style="background:#faece7;color:#a32d2d">예정 ${esc(o.followup.next)} 지남</span></div>`).join("")}</div>`:""}
+  ${pending.length?`<div class="panel"><h3>참여자 신청 (검토 대기)</h3>
+    <div class="hint" style="margin:-6px 0 12px">참여자 모드에서 접수된 신청입니다. 누르면 카드를 열어 심사 단계로 진행할 수 있습니다.</div>
+    ${pending.map(o=>`<div class="dist-row" style="cursor:pointer" onclick="openOrg('${o.id}')">
+        <span style="flex:1;font-weight:500">${esc(o.name||"(이름없음)")}</span>${kindTag(o.kind)}
+        <span class="stage-tag">${esc(o.program||"-")}</span>
+        <span class="stage-tag">신청 ${esc(o.createdAt)}</span></div>`).join("")}</div>`:""}
+  <div class="panel"><h3>단계별 현황</h3>
+    <div class="stage-stat-grid">
+      ${STAGES.map((s,i)=>{const c=orgs.filter(o=>o.stage===i).length;
+        return `<div class="stage-stat" onclick="goStage(${i})"><div class="ss-num">${c}</div><div class="ss-lbl">${esc(s)}</div></div>`;}).join("")}
+    </div></div>
+  <div class="panel"><h3>분류별 분포</h3>
+    ${distRow("성장연계")}${distRow("집중관리")}${distRow("일반 모니터링")}${distRow("관찰")}${counts["미분류"]?distRow("미분류"):""}</div>
+  ${counts["집중관리"]||upcoming?`<div class="panel"><h3>후속관리 우선 목록</h3>
+    ${orgs.filter(o=>effectiveClass(o)==="집중관리"||(o.followup&&o.followup.next&&o.followup.next>=today))
+      .map(o=>`<div class="dist-row" style="cursor:pointer" onclick="openOrg('${o.id}')">
+        <span style="flex:1;font-weight:500">${esc(o.name||"(이름없음)")}</span>${kindTag(o.kind)}
+        ${classBadge(effectiveClass(o))}
+        <span class="stage-tag">${o.followup&&o.followup.next?"접촉 "+esc(o.followup.next):STAGES[o.stage]}</span></div>`).join("")||'<div class="empty">해당 대상이 없습니다.</div>'}</div>`:""}`;
+}
+
+function viewList(){
+  let rows=state.orgs.slice();
+  if(state.query){ const q=state.query.toLowerCase(); rows=rows.filter(o=>(o.name||"").toLowerCase().includes(q)||(o.program||"").toLowerCase().includes(q)); }
+  if(state.filter!=="all") rows=rows.filter(o=>effectiveClass(o)===state.filter);
+  if(state.kindFilter!=="all") rows=rows.filter(o=>(o.kind||"org")===state.kindFilter);
+  if(state.stageFilter!=="all") rows=rows.filter(o=>String(o.stage)===state.stageFilter);
+  if(state.consentFilter==="followup") rows=rows.filter(o=>o.consents&&o.consents.followup);
+  if(state.consentFilter==="survey") rows=rows.filter(o=>o.consents&&o.consents.survey);
+  if(state.consentFilter==="research") rows=rows.filter(o=>o.consents&&o.consents.research);
+  const opts=["all","성장연계","집중관리","일반 모니터링","관찰","미분류"].map(v=>`<option value="${v}" ${state.filter===v?"selected":""}>${v==="all"?"전체 분류":v}</option>`).join("");
+  const kopts=[["all","전체 구분"],["org","기관·기업"],["individual","개인"]].map(([v,l])=>`<option value="${v}" ${state.kindFilter===v?"selected":""}>${l}</option>`).join("");
+  const sopts=[["all","전체 단계"]].concat(STAGES.map((s,i)=>[String(i),s])).map(([v,l])=>`<option value="${v}" ${state.stageFilter===v?"selected":""}>${l}</option>`).join("");
+  const copts=[["all","전체(동의 무관)"],["followup","후속지원 동의자"],["survey","조사참여 동의자"],["research","연구활용 동의자"]].map(([v,l])=>`<option value="${v}" ${state.consentFilter===v?"selected":""}>${l}</option>`).join("");
+  return `
+  <div class="page-title">참여자 목록</div>
+  <div class="page-sub">참여자 한 명/한 곳이 하나의 카드입니다. 동의 필터로 후속지원·조사 대상자를 추출할 수 있습니다.</div>
+  <div class="toolbar">
+    <div class="search"><input placeholder="이름 또는 사업명 검색" value="${esc(state.query)}" oninput="state.query=this.value;render()"></div>
+    <select class="filter-sel" onchange="state.kindFilter=this.value;render()">${kopts}</select>
+    <select class="filter-sel" onchange="state.stageFilter=this.value;render()">${sopts}</select>
+    <select class="filter-sel" onchange="state.filter=this.value;render()">${opts}</select>
+    <select class="filter-sel" onchange="state.consentFilter=this.value;render()">${copts}</select>
+    <button class="btn primary" onclick="go('new')">+ 신규 등록</button>
+  </div>
+  ${rows.length?`<table>
+    <thead><tr><th>이름</th><th>구분</th><th>지역</th><th>참여사업</th><th>담당</th><th>단계</th><th>분류</th></tr></thead>
+    <tbody>${rows.map(o=>`<tr onclick="openOrg('${o.id}')">
+      <td style="font-weight:500">${esc(o.name||"(이름없음)")}${settlePoor(o)?' <span class="flag-warn">정산주의</span>':''}</td>
+      <td>${kindTag(o.kind)}</td>
+      <td style="color:var(--muted)">${esc(regionStr(o)||"-")}</td>
+      <td style="color:var(--muted)">${esc(o.program||"-")}</td>
+      <td style="color:var(--muted)">${esc(o.manager||"-")}</td>
+      <td><span class="stage-tag">${STAGES[o.stage]}</span></td>
+      <td>${classBadge(effectiveClass(o))}</td>
+    </tr>`).join("")}</tbody></table>`
+  :`<div class="panel"><div class="empty">조건에 맞는 참여자가 없습니다.</div></div>`}`;
+}
+
+function viewNew(){
+  const k=state.newKind, isInd=k==="individual";
+  const noProg=state.settings.programs.length===0, noType=state.settings.orgTypes.length===0;
+  return `
+  <button class="back-link" onclick="go('list')">← 목록으로</button>
+  <div class="page-title">신규 등록</div>
+  <div class="page-sub">참여자 구분을 먼저 고르세요. 신청 단계에서 카드가 생성됩니다.</div>
+  <div class="panel">
+    <div class="segmented">
+      <button class="${!isInd?"on":""}" onclick="state.newKind='org';render()">기관·기업</button>
+      <button class="${isInd?"on":""}" onclick="state.newKind='individual';render()">개인 참여자</button>
+    </div>
+    <div class="field"><label>${isInd?"성명":"기관·기업명"} *</label><input id="n_name" placeholder="${isInd?"예: 홍길동":"예: 햇살지역아동센터"}"></div>
+    ${isInd?`
+      <div class="field-row">
+        <div class="field"><label>소속 (선택)</label><input id="n_affil" placeholder="예: OO대학교 / 프리랜서"></div>
+        <div class="field"><label>연락처</label><input id="n_contact" placeholder="예: 010-0000-0000"></div>
+      </div>`
+    :`
+      <div class="field-row">
+        <div class="field"><label>기관 유형</label><select id="n_type">${selOpts(state.settings.orgTypes,"")}</select>${noType?`<div class="hint" style="margin:6px 0 0">관리자에서 유형을 추가하세요.</div>`:""}</div>
+        <div class="field"><label>설립연도</label><input id="n_founded" placeholder="예: 2016"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>대표자</label><input id="n_rep" placeholder="예: 김OO"></div>
+        <div class="field"><label>연락처</label><input id="n_contact" placeholder="예: 02-000-0000"></div>
+      </div>`}
+    ${regionSelects("n_sido","n_gu","","")}
+    <div class="field"><label>참여 사업</label><select id="n_program">${selOpts(callTitles(),"")}</select>${callTitles().length===0?`<div class="hint" style="margin:6px 0 0">공모사업 탭에서 공모사업을 먼저 등록하세요.</div>`:""}</div>
+    <div class="save-bar"><button class="btn primary" onclick="createOrg()">카드 생성</button></div>
+  </div>`;
+}
+async function createOrg(){
+  const v=id=>{const e=document.getElementById(id);return e?e.value.trim():"";};
+  const name=v("n_name"); if(!name){ alert("이름을 입력하세요."); return; }
+  const o=blankOrg(state.newKind);
+  o.name=name; o.contact=v("n_contact"); o.sido=v("n_sido"); o.sigungu=v("n_gu"); o.program=v("n_program");
+  if(state.newKind==="individual"){ o.affiliation=v("n_affil"); }
+  else { o.type=v("n_type"); o.founded=v("n_founded"); o.rep=v("n_rep"); }
+  state.orgs.unshift(o); await saveStore(); openOrg(o.id);
+}
+
+function viewLogin(){
+  return `
+  <div style="max-width:380px;margin:7vh auto 0">
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="display:inline-flex;align-items:center;gap:9px;font-size:18px;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block"></span>함께일하는재단 통합관리시스템</div>
+      <div class="page-sub" style="margin:8px 0 0">아이디와 비밀번호로 로그인하세요.</div>
+    </div>
+    <div class="panel">
+      <div class="field"><label>아이디</label><input id="login_id" placeholder="아이디(기관 이메일)" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="field"><label>비밀번호</label><input id="login_pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div id="login_err" class="hint" style="color:#a32d2d;display:none;margin:-8px 0 14px">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+      <button class="btn primary" style="width:100%;justify-content:center" onclick="doLogin()">로그인</button>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:8px" onclick="state.authView='signup';render()">기관 회원가입</button>
+    </div>
+  </div>`;
+}
+function doLogin(){
+  const id=document.getElementById("login_id").value.trim(), pw=document.getElementById("login_pw").value;
+  if(id===ADMIN_ID && pw===ADMIN_PW){ state.partAuth=false; state.adminAuth=true; state.view="dashboard"; render(); return; }
+  const acc=state.accounts.find(a=>a.loginId.toLowerCase()===id.toLowerCase() && a.password===pw);
+  if(acc){ state.adminAuth=false; state.partAuth=true; state.currentAccountId=acc.id; state.partView="calls"; state.applyCallId=null; render(); return; }
+  const e=document.getElementById("login_err"); if(e)e.style.display="block";
+}
+function logout(){ state.partAuth=false; state.adminAuth=false; state.currentAccountId=null; state.partView="calls"; state.applyCallId=null; state.applyFiles=[]; state.authView="login"; render(); }
+
+function viewSignup(){
+  const isInd=state.signupKind==="individual";
+  return `
+  <div style="max-width:420px;margin:5vh auto 0">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="display:inline-flex;align-items:center;gap:9px;font-size:18px;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block"></span>기관 회원가입</div>
+      <div class="page-sub" style="margin:8px 0 0">가입하면 신청할 때 정보가 자동으로 채워집니다.</div>
+    </div>
+    <div class="panel">
+      <div class="segmented">
+        <button class="${!isInd?"on":""}" onclick="state.signupKind='org';render()">기관·기업</button>
+        <button class="${isInd?"on":""}" onclick="state.signupKind='individual';render()">개인</button>
+      </div>
+      <div class="field"><label>아이디(이메일) *</label><input id="su_id" placeholder="예: hello@org.kr"></div>
+      <div class="field"><label>비밀번호 *</label><input id="su_pw" type="password" placeholder="비밀번호"></div>
+      <div class="field"><label>${isInd?"성명":"기관·기업명"} *</label><input id="su_name" placeholder="${isInd?"예: 홍길동":"예: 햇살지역아동센터"}"></div>
+      ${isInd?`<div class="field-row">${fld("소속(선택)","su_affil","","예: 프리랜서")}${fld("연락처","su_contact","","예: 010-0000-0000")}</div>
+        <div class="field"><label>연령대</label><select id="su_age"><option value="">선택</option>${AGE_BANDS.map(a=>`<option>${a}</option>`).join("")}</select></div>`
+      :`<div class="field-row"><div class="field"><label>기관 유형</label><select id="su_type">${selOpts(state.settings.orgTypes,"")}</select></div>${fld("설립연도","su_founded","","예: 2016")}</div>
+        <div class="field-row">${fld("대표자","su_rep","","예: 김OO")}${fld("연락처","su_contact","","예: 02-000-0000")}</div>
+        <div class="field"><label>규모(연 매출·예산)</label><select id="su_scale"><option value="">선택</option>${SCALE_BANDS.map(a=>`<option>${a}</option>`).join("")}</select></div>`}
+      ${regionSelects("su_sido","su_gu","","")}
+      <div class="field"><label>개인정보 동의</label>
+        <div class="consent-box">${CONSENTS.map(c=>`<label class="consent-row"><input type="checkbox" id="su_consent_${c.k}" ${c.required?"":""}> ${c.label} ${c.required?'<span class="req">(필수)</span>':'<span class="opt">(선택)</span>'}</label>`).join("")}</div>
+      </div>
+      <div id="su_err" class="hint" style="color:#a32d2d;display:none;margin:-4px 0 12px"></div>
+      <div class="save-bar"><button class="btn primary" onclick="doSignup()">가입하고 시작</button>
+        <button class="btn" onclick="state.authView='login';render()">로그인으로</button></div>
+    </div>
+  </div>`;
+}
+function doSignup(){
+  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():"";};
+  const loginId=g("su_id"), pw=g("su_pw"), name=g("su_name");
+  const err=msg=>{ const e=document.getElementById("su_err"); if(e){e.textContent=msg;e.style.display="block";} };
+  if(!loginId||!pw||!name){ err("필수 항목(아이디·비밀번호·이름)을 입력하세요."); return; }
+  if(loginId.toLowerCase()===ADMIN_ID.toLowerCase()){ err("사용할 수 없는 아이디입니다."); return; }
+  if(state.accounts.some(a=>a.loginId.toLowerCase()===loginId.toLowerCase())){ err("이미 가입된 아이디입니다."); return; }
+  const chk=k=>{const e=document.getElementById("su_consent_"+k);return e?e.checked:false;};
+  if(!chk("collect")){ err("필수 항목인 개인정보 수집·이용에 동의해야 가입할 수 있습니다."); return; }
+  const consents={ version:CONSENT_VERSION, agreedAt:new Date().toISOString().slice(0,10) };
+  CONSENTS.forEach(c=>consents[c.k]=chk(c.k));
+  const acc={ id:"ACC-"+Date.now().toString(36), loginId, password:pw, kind:state.signupKind, name,
+    type:g("su_type"), affiliation:g("su_affil"), founded:g("su_founded"), rep:g("su_rep"), contact:g("su_contact"),
+    sido:g("su_sido"), sigungu:g("su_gu"), ageBand:g("su_age"), scale:g("su_scale"), consents,
+    createdAt:new Date().toISOString().slice(0,10) };
+  state.accounts.push(acc);
+  saveStore().then(()=>{ state.adminAuth=false; state.partAuth=true; state.currentAccountId=acc.id; state.partView="calls"; state.authView="login"; render(); });
+}
+function currentAccount(){ return state.accounts.find(a=>a.id===state.currentAccountId); }
+
+function partHeader(){
+  const tab=(v,label)=>`<button class="nav-btn ${state.partView===v||(v==='calls'&&state.partView==='apply')?'active':''}" onclick="state.partView='${v}';state.applyCallId=null;render()">${label}</button>`;
+  const acc=currentAccount();
+  return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:22px;flex-wrap:wrap">
+    <div class="logo" style="font-size:15px;margin-right:8px"><span class="dot"></span>참여자 포털</div>
+    ${tab('calls','공모사업')}${tab('myapps','내 신청내역')}${tab('profile','내 정보')}
+    <span style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span class="page-sub" style="margin:0">${esc(acc?acc.name:"")}</span>
+      <button class="btn sm" onclick="logout()">로그아웃</button></span>
+  </div>`;
+}
+function viewPartCalls(){
+  const open=state.calls.filter(callOpen);
+  return `${partHeader()}
+  <div class="page-title">참여 가능한 공모사업</div>
+  <div class="page-sub">신청할 공모사업을 선택하세요.</div>
+  ${open.length?open.map(c=>`<div class="panel">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      ${c.image?`<img class="call-thumb" data-filekey="${c.image.key}" alt="">`:""}
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:600;margin-bottom:4px">${esc(c.title)}</div>
+        <div class="page-sub" style="margin:0 0 8px">${esc(c.desc||"")}</div>
+        <div style="font-size:12.5px;color:var(--muted);line-height:1.8">
+          신청대상 · ${esc(c.target)}<br>
+          신청기간 · ${esc(c.start||"-")} ~ ${esc(c.end||"-")}<br>
+          ${c.budget?"지원규모 · "+esc(c.budget)+"<br>":""}${c.capacity?"모집정원 · "+esc(c.capacity):""}
+        </div>
+      </div>
+      <button class="btn primary" onclick="state.applyCallId='${c.id}';state.applyFiles=[];state.partView='apply';render()">신청하기</button>
+    </div></div>`).join("")
+  :`<div class="panel"><div class="empty">현재 모집 중인 공모사업이 없습니다.</div></div>`}`;
+}
+function viewApply(){
+  const c=state.calls.find(x=>x.id===state.applyCallId); if(!c) return viewPartCalls();
+  const acc=currentAccount();
+  return `${partHeader()}
+  <button class="back-link" onclick="state.applyCallId=null;state.partView='calls';render()">← 공모사업 목록</button>
+  <div class="page-title">${esc(c.title)} 신청</div>
+  <div class="page-sub">회원 정보가 자동으로 채워집니다. 신청 내용만 작성해 제출하세요.</div>
+  <div class="panel">
+    ${c.image?`<img class="call-image" data-filekey="${c.image.key}" alt="">`:""}
+    <div class="field"><label>신청 주체</label><input value="${esc(acc?acc.name:"")} (${acc&&acc.kind==='individual'?'개인':'기관·기업'})" disabled></div>
+    ${regionSelects("a_sido","a_gu",acc?acc.sido:"",acc?acc.sigungu:"")}
+    ${area("신청 동기·욕구","a_motive","","예: 방과후 프로그램 확대, 운영비 부족")}
+    ${fld("요청 예산(원)","a_budget","","예: 12,000,000")}
+    <div class="field"><label>첨부 파일 (사업계획서 등 · 파일당 최대 3MB)</label>
+      ${fileListHtml(state.applyFiles,"removeApplyFile")}
+      <div class="uploader"><button class="btn sm" onclick="document.getElementById('applyFileInput').click()">+ 파일 첨부</button>
+      <input type="file" id="applyFileInput" multiple style="display:none" onchange="addApplyFile(this)"></div>
+      <div class="hint" style="margin-top:2px">용량이 큰 파일은 드라이브 링크를 신청 동기란에 적어주세요.</div>
+    </div>
+    <div class="field"><label>개인정보 동의 (이 사업에 적용)</label>
+      <div class="consent-box">
+        <label class="consent-row"><input type="checkbox" id="a_consent_collect"> 본 사업의 개인정보 수집·이용에 동의합니다 <span class="req">(필수)</span></label>
+        <label class="consent-row"><input type="checkbox" id="a_consent_followup"> 사업 종료 후 후속지원 안내·조사 연락에 동의합니다 <span class="opt">(선택)</span></label>
+      </div>
+      <div class="hint" style="margin-top:4px">가입 시 동의 내역이 함께 적용됩니다.</div>
+    </div>
+    <div class="save-bar"><button class="btn primary" onclick="submitApply()">신청서 제출</button></div>
+  </div>`;
+}
+function submitApply(){
+  const c=state.calls.find(x=>x.id===state.applyCallId); if(!c)return;
+  const acc=currentAccount(); if(!acc)return;
+  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():"";};
+  const chk=id=>{const e=document.getElementById(id);return e?e.checked:false;};
+  if(!chk("a_consent_collect")){ alert("개인정보 수집·이용(필수)에 동의해야 신청할 수 있습니다."); return; }
+  const consents=Object.assign(blankConsents(), acc.consents||{}, {collect:true, version:CONSENT_VERSION, agreedAt:new Date().toISOString().slice(0,10)});
+  if(chk("a_consent_followup")) consents.followup=true;
+  const o=createApplication(c, { kind:acc.kind, name:acc.name, contact:acc.contact, sido:g("a_sido"), sigungu:g("a_gu"),
+    type:acc.type, founded:acc.founded, rep:acc.rep, affiliation:acc.affiliation, motive:g("a_motive"), budget:g("a_budget"),
+    ageBand:acc.ageBand, scale:acc.scale, consents });
+  o.accountId=acc.id;
+  o.attachments=state.applyFiles.slice();
+  state.orgs.unshift(o);
+  saveStore().then(()=>{ state.applyCallId=null; state.applyFiles=[]; state.partView="myapps"; render(); alert("신청이 접수되었습니다. ‘내 신청내역’에서 진행 상태를 확인할 수 있습니다."); });
+}
+function partStatus(o){
+  const r=o.review&&o.review.result;
+  if(r==="미선정") return {label:"미선정", cls:"b-watch"};
+  if(o.stage>=4) return {label:"사후관리", cls:"b-general"};
+  if(o.stage>=2) return {label:"사업 진행 중", cls:"b-general"};
+  if(r==="선정") return {label:"선정", cls:"b-growth"};
+  if(o.stage===1) return {label:"심사 중", cls:"b-intensive"};
+  return {label:"접수 완료", cls:"b-watch"};
+}
+function viewMyApps(){
+  const mine=state.orgs.filter(o=>o.accountId===state.currentAccountId);
+  return `${partHeader()}
+  <div class="page-title">내 신청내역</div>
+  <div class="page-sub">제출한 신청서와 진행 상태입니다.</div>
+  ${mine.length?`<table>
+    <thead><tr><th>공모사업</th><th>신청일</th><th>상태</th><th></th></tr></thead>
+    <tbody>${mine.map(o=>{const s=partStatus(o);return `<tr onclick="openMyApp('${o.id}')">
+      <td style="font-weight:500">${esc(o.program||"-")}</td>
+      <td style="color:var(--muted)">${esc(o.createdAt)}</td>
+      <td><span class="badge ${s.cls}">${s.label}</span></td>
+      <td style="color:var(--faint)">자세히 ›</td></tr>`;}).join("")}</tbody></table>`
+  :`<div class="panel"><div class="empty">아직 신청한 공모사업이 없습니다. ‘공모사업’ 탭에서 신청해 보세요.</div></div>`}`;
+}
+function openMyApp(id){ state.activeId=id; state.partView="appdetail"; render(); }
+function viewMyAppDetail(){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o||o.accountId!==state.currentAccountId) return viewMyApps();
+  const s=partStatus(o);
+  const canReport = (o.review&&o.review.result==="선정") || o.stage>=2;
+  return `${partHeader()}
+  <button class="back-link" onclick="state.partView='myapps';render()">← 내 신청내역</button>
+  <div class="detail-head" style="margin-bottom:10px">
+    <div><div class="nm" style="font-size:17px;font-weight:600">${esc(o.program||"-")}</div>
+      <div class="meta" style="color:var(--muted);font-size:13px">신청일 ${esc(o.createdAt)}</div></div>
+    <div class="badges" style="margin-left:auto"><span class="badge ${s.cls}">${s.label}</span></div>
+  </div>
+  <div class="panel">
+    <h3>제출한 신청 내용</h3>
+    <table style="width:100%;border:none"><tbody>
+      <tr><td style="color:var(--muted);padding:6px 0;width:32%">지역</td><td style="text-align:right">${esc(regionStr(o)||"-")}</td></tr>
+      <tr><td style="color:var(--muted);padding:6px 0">요청 예산</td><td style="text-align:right">${esc(o.apply.budget||"-")}</td></tr>
+      <tr><td style="color:var(--muted);padding:6px 0;vertical-align:top">신청 동기</td><td style="text-align:right">${esc(o.apply.motive||"-")}</td></tr>
+    </tbody></table>
+    <div style="margin-top:8px"><div class="page-sub" style="margin:0 0 4px">첨부 파일</div>${fileListHtml(o.attachments,null)}</div>
+  </div>
+  ${o.review&&o.review.opinion?`<div class="panel"><h3>심사 안내</h3><div class="page-sub" style="margin:0">${esc(o.review.opinion)}</div></div>`:""}
+  ${canReport?`<div class="panel">
+    <h3>결과보고</h3>
+    ${o.reportStatus==="approved"?`<div class="flag-warn" style="background:var(--t-general-bg);color:var(--t-general);margin-bottom:10px">승인됨</div>`
+      :o.reportStatus==="rejected"?`<div class="flag-warn" style="margin-bottom:6px">반려됨</div><div class="page-sub" style="margin:0 0 10px">반려 사유: ${esc(o.reportRejectReason||"-")}</div>`
+      :o.reportStatus==="submitted"?`<div class="flag-warn" style="background:var(--t-intensive-bg);color:var(--t-intensive);margin-bottom:10px">검토 중</div>`
+      :`<div class="hint" style="margin:-6px 0 12px">선정된 사업의 결과를 작성하고 파일을 올린 뒤 제출하세요.</div>`}
+    ${area("결과 요약","mr_summary",o.closing.performance,"예: 참여아동 35명 · 만족도 4.3/5")}
+    <div class="field"><label>결과 파일 (보고서·사진 등 · 파일당 최대 3MB)</label>
+      ${fileListHtml(o.resultFiles,"removeResult")}
+      <div class="uploader"><button class="btn sm" onclick="document.getElementById('cardResultInput').click()">+ 파일 추가</button>
+      <input type="file" id="cardResultInput" multiple style="display:none" onchange="addCardFile(this,'resultFiles')"></div></div>
+    <div class="save-bar"><button class="btn primary" onclick="saveMyResult()">결과보고 제출</button>
+      <span class="saved-msg" id="savedMsg">제출되었습니다</span></div>
+  </div>`:`<div class="panel"><div class="page-sub" style="margin:0">선정 후 결과보고를 작성할 수 있습니다.</div></div>`}`;
+}
+function saveMyResult(){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return;
+  const e=document.getElementById("mr_summary"); if(e)o.closing.performance=e.value;
+  o.closing.report=true; o.reportStatus="submitted"; o.reportRejectReason="";
+  saveStore().then(()=>{ render(); const m=document.getElementById("savedMsg"); if(m){m.classList.add("show");setTimeout(()=>m.classList.remove("show"),1600);} });
+}
+function viewMyProfile(){
+  const a=currentAccount(); if(!a) return viewPartCalls();
+  const isInd=a.kind==="individual";
+  return `${partHeader()}
+  <div class="page-title">내 정보</div>
+  <div class="page-sub">여기 저장한 정보가 신청서에 자동으로 채워집니다.</div>
+  <div class="panel">
+    <div class="field"><label>아이디</label><input value="${esc(a.loginId)}" disabled></div>
+    <div class="field"><label>${isInd?"성명":"기관·기업명"}</label><input id="pf_name" value="${esc(a.name)}"></div>
+    ${isInd?`<div class="field-row">${fld("소속","pf_affil",a.affiliation)}${fld("연락처","pf_contact",a.contact)}</div>`
+    :`<div class="field-row"><div class="field"><label>기관 유형</label><select id="pf_type">${selOpts(state.settings.orgTypes,a.type)}</select></div>${fld("설립연도","pf_founded",a.founded)}</div>
+      <div class="field-row">${fld("대표자","pf_rep",a.rep)}${fld("연락처","pf_contact",a.contact)}</div>`}
+    ${regionSelects("pf_sido","pf_gu",a.sido,a.sigungu)}
+    <div class="field"><label>비밀번호 변경</label><input id="pf_pw" type="password" placeholder="변경 시에만 입력"></div>
+    <div class="save-bar"><button class="btn primary" onclick="saveProfile()">저장</button>
+      <span class="saved-msg" id="savedMsg">저장되었습니다</span></div>
+  </div>`;
+}
+function saveProfile(){
+  const a=currentAccount(); if(!a)return;
+  const g=id=>{const e=document.getElementById(id);return e?e.value:undefined;};
+  a.name=g("pf_name")??a.name; a.contact=g("pf_contact")??a.contact;
+  a.sido=g("pf_sido")??a.sido; a.sigungu=g("pf_gu")??a.sigungu;
+  if(a.kind==="individual"){ a.affiliation=g("pf_affil")??a.affiliation; }
+  else { a.type=g("pf_type")??a.type; a.founded=g("pf_founded")??a.founded; a.rep=g("pf_rep")??a.rep; }
+  const pw=g("pf_pw"); if(pw)a.password=pw;
+  saveStore().then(()=>{ const m=document.getElementById("savedMsg"); if(m){m.classList.add("show");setTimeout(()=>m.classList.remove("show"),1600);} });
+}
+function applyFields(kind){ return ""; }
+async function addApplyFile(input){
+  const files=[...input.files]; input.value="";
+  for(const f of files){
+    if(f.size>MAX_FILE){ alert(`"${f.name}"은(는) 3MB를 초과해 첨부할 수 없습니다.`); continue; }
+    const d=await readFileAsDataUrl(f); const key=await putFile(d);
+    if(key) state.applyFiles.push({name:f.name,type:f.type,size:f.size,key});
+  }
+  render();
+}
+function removeApplyFile(i){ const f=state.applyFiles[i]; if(f)delFile(f.key); state.applyFiles.splice(i,1); render(); }
+async function addCardFile(input, field){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o){ input.value=""; return; }
+  if(!o[field])o[field]=[];
+  const files=[...input.files]; input.value="";
+  for(const f of files){
+    if(f.size>MAX_FILE){ alert(`"${f.name}"은(는) 3MB를 초과해 첨부할 수 없습니다.`); continue; }
+    const d=await readFileAsDataUrl(f); const key=await putFile(d);
+    if(key) o[field].push({name:f.name,type:f.type,size:f.size,key});
+  }
+  await saveStore(); render();
+}
+function removeCardFile(field,i){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o||!o[field])return; const f=o[field][i]; if(f)delFile(f.key); o[field].splice(i,1); saveStore().then(render); }
+function removeAttach(i){ removeCardFile("attachments",i); }
+function removeResult(i){ removeCardFile("resultFiles",i); }
+function viewPartDone(){
+  const d=state.partDone||{};
+  return `${partHeader()}
+  <div style="max-width:460px;margin:4vh auto 0" class="panel">
+    <div style="text-align:center">
+      <div style="font-size:34px;margin-bottom:8px">✓</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:6px">신청이 접수되었습니다</div>
+      <div class="page-sub">${esc(d.name||"")} 님의 <b>${esc(d.call||"")}</b> 신청서가 재단에 전달되었습니다. 심사 결과는 별도로 안내됩니다.</div>
+      <div class="save-bar" style="justify-content:center"><button class="btn primary" onclick="state.partDone=null;render()">다른 공모사업 보기</button></div>
+    </div>
+  </div>`;
+}
+
+function viewStats(){
+  const orgs=state.orgs;
+  const tally=(fn)=>{const c={};orgs.forEach(o=>{const k=fn(o);if(k)c[k]=(c[k]||0)+1;});return c;};
+  const consentTally=(key)=>{let y=0,n=0;orgs.forEach(o=>{(o.consents&&o.consents[key])?y++:n++;});return {"동의":y,"미동의":n};};
+  const bar=(title,counts)=>{
+    const entries=Object.entries(counts).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    const max=Math.max(1,...entries.map(e=>e[1]));
+    return `<div class="panel"><h3>${title}</h3>${entries.length?entries.map(([k,v])=>`<div class="dist-row"><span class="name" style="width:130px">${esc(k)}</span><div class="dist-bar"><div class="dist-fill" style="width:${Math.round(v/max*100)}%;background:var(--accent)"></div></div><span class="cnt">${v}</span></div>`).join(""):`<div class="hint">데이터가 없습니다.</div>`}</div>`;
+  };
+  return `
+  <div class="page-title">통계</div>
+  <div class="page-sub">모집·참여자 분포와 동의 현황을 한눈에 봅니다. (전체 ${orgs.length}건)</div>
+  ${bar("구분", tally(o=>o.kind==='individual'?'개인':'기관·기업'))}
+  ${bar("공모사업별 신청", tally(o=>o.program||'미지정'))}
+  ${bar("분류", tally(o=>effectiveClass(o)))}
+  ${bar("단계", tally(o=>STAGES[o.stage]))}
+  ${bar("지역(시·도)", tally(o=>o.sido||'미입력'))}
+  ${bar("기관 유형", tally(o=>o.kind!=='individual'?(o.type||'미입력'):null))}
+  ${bar("규모(기관)", tally(o=>o.kind!=='individual'?(o.scale||'미입력'):null))}
+  ${bar("연령대(개인)", tally(o=>o.kind==='individual'?(o.ageBand||'미입력'):null))}
+  ${bar("후속지원 안내 동의", consentTally('followup'))}
+  ${bar("조사 참여 동의", consentTally('survey'))}`;
+}
+
+function viewAdmin(){
+  const chips=(key)=>state.settings[key].map(x=>`<span class="chip">${esc(x)}<button onclick="delSetting('${key}','${esc(x)}')" title="삭제">×</button></span>`).join("")||`<span class="hint">등록된 항목이 없습니다.</span>`;
+  return `
+  <div style="display:flex;align-items:flex-start;margin-bottom:22px">
+    <div><div class="page-title">관리자 설정</div><div class="page-sub" style="margin-bottom:0">공모사업은 ‘공모사업’ 탭에서 등록·관리합니다.</div></div>
+  </div>
+  <div class="panel">
+    <h3>기관 유형 목록</h3>
+    <div class="chip-list">${chips("orgTypes")}</div>
+    <div class="add-row"><input id="add_orgTypes" placeholder="새 유형 입력 (예: 마을기업)" onkeydown="if(event.key==='Enter')addSetting('orgTypes')">
+      <button class="btn primary" onclick="addSetting('orgTypes')">추가</button></div>
+  </div>
+  <div class="panel">
+    <h3>담당 매니저 목록</h3>
+    <div class="chip-list">${chips("managers")}</div>
+    <div class="add-row"><input id="add_managers" placeholder="매니저 이름 입력" onkeydown="if(event.key==='Enter')addSetting('managers')">
+      <button class="btn primary" onclick="addSetting('managers')">추가</button></div>
+  </div>
+  <div class="panel">
+    <h3>전체 백업 (권장 · 파일 포함)</h3>
+    <div class="hint" style="margin:-6px 0 14px">업로드한 첨부·이미지, 성과지표, 활동 타임라인, 회원 계정까지 <b>모든 데이터</b>를 하나의 백업 파일로 저장합니다. 컴퓨터를 옮기거나 초기화하기 전에 이 파일을 내려받아 안전한 곳(클라우드·USB)에 보관하고, 새 환경에서 이 파일로 복원하세요.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn primary" onclick="exportBackup()">전체 백업 내보내기</button>
+      <button class="btn" onclick="document.getElementById('backupFile').click()">전체 백업 불러오기</button>
+      <input type="file" id="backupFile" accept=".json" style="display:none" onchange="importBackup(this)">
+    </div>
+  </div>
+  <div class="panel">
+    <h3>엑셀 백업 / 이전 (텍스트 데이터용)</h3>
+    <div class="hint" style="margin:-6px 0 14px">참여자·공모사업·정산 등 표 데이터를 엑셀로 봅니다. 단, 업로드 파일·성과지표·활동 타임라인은 엑셀에 담기지 않으니 전체 보관은 위 ‘전체 백업’을 이용하세요.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" onclick="exportExcel()">엑셀로 내보내기</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">엑셀 불러오기</button>
+      <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
+    </div>
+  </div>`;
+}
+
+function viewCalls(){
+  if(state.callEdit) return viewCallEdit();
+  return `
+  <div style="display:flex;align-items:flex-start;margin-bottom:22px">
+    <div><div class="page-title">공모사업</div><div class="page-sub" style="margin-bottom:0">여기서 등록한 공모사업이 참여자 모드의 신청 목록에 나타납니다.</div></div>
+    <button class="btn primary" style="margin-left:auto" onclick="state.callEdit=newCall();render()">+ 공모사업 등록</button>
+  </div>
+  ${state.calls.length?`<table>
+    <thead><tr><th>제목</th><th>대상</th><th>신청기간</th><th>상태</th><th>신청 건수</th></tr></thead>
+    <tbody>${state.calls.map(c=>{const cnt=state.orgs.filter(o=>o.callId===c.id).length;
+      return `<tr onclick="state.callEdit=JSON.parse(JSON.stringify(state.calls.find(x=>x.id==='${c.id}')));render()">
+      <td style="font-weight:500">${esc(c.title||"(제목없음)")}</td>
+      <td style="color:var(--muted)">${esc(c.target)}</td>
+      <td style="color:var(--muted)">${esc(c.start||"-")} ~ ${esc(c.end||"-")}</td>
+      <td>${callOpen(c)?'<span class="badge b-general">모집중</span>':'<span class="badge b-watch">마감</span>'}</td>
+      <td style="color:var(--muted)">${cnt}건</td></tr>`;}).join("")}</tbody></table>`
+  :`<div class="panel"><div class="empty">등록된 공모사업이 없습니다. ‘공모사업 등록’으로 추가하세요.</div></div>`}`;
+}
+function viewCallEdit(){
+  const c=state.callEdit, isNew=!state.calls.some(x=>x.id===c.id);
+  return `
+  <button class="back-link" onclick="state.callEdit=null;render()">← 공모사업 목록</button>
+  <div class="page-title">${isNew?"공모사업 등록":"공모사업 수정"}</div>
+  <div class="panel">
+    <div class="field"><label>제목 *</label><input id="c_title" value="${esc(c.title)}" placeholder="예: 모두의공모 2026"></div>
+    ${area("소개","c_desc",c.desc,"공모사업 목적과 내용을 적어주세요.")}
+    <div class="field"><label>대표 이미지 (참여자 화면에 표시 · 최대 3MB)</label>
+      ${c.image?`<img class="call-image" data-filekey="${c.image.key}" alt="">`:""}
+      <div class="uploader">
+        <button class="btn sm" onclick="document.getElementById('callImgInput').click()">${c.image?"이미지 변경":"+ 이미지 업로드"}</button>
+        ${c.image?`<button class="btn sm" onclick="removeCallImage()">삭제</button>`:""}
+        <input type="file" id="callImgInput" accept="image/*" style="display:none" onchange="addCallImage(this)">
+      </div></div>
+    <div class="field-row">
+      <div class="field"><label>신청대상</label><select id="c_target">${["둘 다","기관·기업","개인"].map(t=>`<option ${c.target===t?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div class="field"><label>상태</label><select id="c_status">${["모집중","마감"].map(t=>`<option ${c.status===t?"selected":""}>${t}</option>`).join("")}</select></div>
+    </div>
+    <div class="field-row">${fld("신청 시작일","c_start",c.start,"","date")}${fld("신청 마감일","c_end",c.end,"","date")}</div>
+    <div class="field-row">${fld("지원 규모","c_budget",c.budget,"예: 최대 1,200만원")}${fld("모집 정원","c_capacity",c.capacity,"예: 20팀")}</div>
+    <div class="save-bar">
+      <button class="btn primary" onclick="saveCall()">저장</button>
+      ${isNew?"":`<button class="btn danger" onclick="deleteCall('${c.id}')">삭제</button>`}
+    </div>
+  </div>`;
+}
+async function saveCall(){
+  const c=state.callEdit; const g=id=>{const e=document.getElementById(id);return e?e.value:"";};
+  c.title=g("c_title").trim(); if(!c.title){ alert("제목을 입력하세요."); return; }
+  c.desc=g("c_desc"); c.target=g("c_target"); c.status=g("c_status");
+  c.start=g("c_start"); c.end=g("c_end"); c.budget=g("c_budget"); c.capacity=g("c_capacity");
+  const i=state.calls.findIndex(x=>x.id===c.id);
+  if(i>=0) state.calls[i]=c; else state.calls.unshift(c);
+  await saveStore(); state.callEdit=null; render();
+}
+async function deleteCall(id){
+  if(!confirm("이 공모사업을 삭제할까요? 이미 접수된 신청 카드는 그대로 남습니다.")) return;
+  const c=state.calls.find(x=>x.id===id); if(c&&c.image)delFile(c.image.key);
+  state.calls=state.calls.filter(x=>x.id!==id); await saveStore(); state.callEdit=null; render();
+}
+async function addCallImage(input){
+  const f=input.files[0]; input.value=""; if(!f)return;
+  if(!(f.type||"").startsWith("image/")){ alert("이미지 파일만 업로드할 수 있습니다."); return; }
+  if(f.size>MAX_FILE){ alert("이미지가 3MB를 초과합니다. 더 작은 이미지를 사용해 주세요."); return; }
+  const d=await readFileAsDataUrl(f); const key=await putFile(d); if(!key)return;
+  if(state.callEdit.image)delFile(state.callEdit.image.key);
+  state.callEdit.image={name:f.name,type:f.type,key}; render();
+}
+function removeCallImage(){ if(state.callEdit.image)delFile(state.callEdit.image.key); state.callEdit.image=null; render(); }
+async function addSetting(key){
+  const el=document.getElementById("add_"+key), v=el.value.trim(); if(!v)return;
+  if(!state.settings[key].includes(v)) state.settings[key].push(v);
+  el.value=""; await saveStore(); render();
+}
+async function delSetting(key,val){
+  state.settings[key]=state.settings[key].filter(x=>x!==val); await saveStore(); render();
+}
+
+const SCORE_REV={"미흡":1,"보통":2,"우수":3};
+const EXPORT_COLS=[
+  {h:"ID", get:o=>o.id, set:(o,v)=>{if(v)o.id=String(v);}},
+  {h:"구분", get:o=>o.kind==="individual"?"개인":"기관·기업", set:(o,v)=>o.kind=(String(v).indexOf("개인")>=0?"individual":"org")},
+  {h:"이름", get:o=>o.name, set:(o,v)=>o.name=String(v)},
+  {h:"유형", get:o=>o.type, set:(o,v)=>o.type=String(v)},
+  {h:"소속", get:o=>o.affiliation, set:(o,v)=>o.affiliation=String(v)},
+  {h:"설립연도", get:o=>o.founded, set:(o,v)=>o.founded=String(v)},
+  {h:"대표자", get:o=>o.rep, set:(o,v)=>o.rep=String(v)},
+  {h:"연락처", get:o=>o.contact, set:(o,v)=>o.contact=String(v)},
+  {h:"시도", get:o=>o.sido, set:(o,v)=>o.sido=String(v)},
+  {h:"시군구", get:o=>o.sigungu, set:(o,v)=>o.sigungu=String(v)},
+  {h:"참여사업", get:o=>o.program, set:(o,v)=>o.program=String(v)},
+  {h:"단계", get:o=>STAGES[o.stage], set:(o,v)=>{const i=STAGES.indexOf(String(v).trim()); o.stage=i>=0?i:0;}},
+  {h:"신청동기", get:o=>o.apply.motive, set:(o,v)=>o.apply.motive=String(v)},
+  {h:"요청예산", get:o=>o.apply.budget, set:(o,v)=>o.apply.budget=String(v)},
+  {h:"서류점수", get:o=>o.review.doc, set:(o,v)=>o.review.doc=String(v)},
+  {h:"면접점수", get:o=>o.review.interview, set:(o,v)=>o.review.interview=String(v)},
+  {h:"선정결과", get:o=>o.review.result, set:(o,v)=>o.review.result=String(v)},
+  {h:"평가의견", get:o=>o.review.opinion, set:(o,v)=>o.review.opinion=String(v)},
+  {h:"멘토링", get:o=>o.progress.mentoring, set:(o,v)=>o.progress.mentoring=String(v)},
+  {h:"집행률", get:o=>o.progress.exec, set:(o,v)=>o.progress.exec=String(v)},
+  {h:"현장점검", get:o=>o.progress.inspection, set:(o,v)=>o.progress.inspection=String(v)},
+  {h:"중간이슈", get:o=>o.progress.issue, set:(o,v)=>o.progress.issue=String(v)},
+  {h:"결과보고", get:o=>o.closing.report?"제출 완료":"미제출", set:(o,v)=>o.closing.report=(String(v).indexOf("제출")>=0&&String(v).indexOf("미")<0)},
+  {h:"핵심성과", get:o=>o.closing.performance, set:(o,v)=>o.closing.performance=String(v)},
+  {h:"회계역량", get:o=>o.scores.accounting?SCORE_OPT[o.scores.accounting]:"", set:(o,v)=>o.scores.accounting=SCORE_REV[String(v).trim()]||0},
+  {h:"사업수행", get:o=>o.scores.execution?SCORE_OPT[o.scores.execution]:"", set:(o,v)=>o.scores.execution=SCORE_REV[String(v).trim()]||0},
+  {h:"성과", get:o=>o.scores.outcome?SCORE_OPT[o.scores.outcome]:"", set:(o,v)=>o.scores.outcome=SCORE_REV[String(v).trim()]||0},
+  {h:"자립", get:o=>o.scores.sustainability?SCORE_OPT[o.scores.sustainability]:"", set:(o,v)=>o.scores.sustainability=SCORE_REV[String(v).trim()]||0},
+  {h:"연계관심", get:o=>o.scores.linkage?SCORE_OPT[o.scores.linkage]:"", set:(o,v)=>o.scores.linkage=SCORE_REV[String(v).trim()]||0},
+  {h:"분류수동", get:o=>o.followup.manual, set:(o,v)=>o.followup.manual=String(v)},
+  {h:"후속지원", get:o=>o.followup.support, set:(o,v)=>o.followup.support=String(v)},
+  {h:"재단연계", get:o=>o.followup.linkage, set:(o,v)=>o.followup.linkage=String(v)},
+  {h:"다음접촉", get:o=>o.followup.next, set:(o,v)=>o.followup.next=String(v).slice(0,10)},
+  {h:"생성일", get:o=>o.createdAt, set:(o,v)=>{if(v)o.createdAt=String(v).slice(0,10);}},
+  {h:"공모사업ID", get:o=>o.callId, set:(o,v)=>o.callId=String(v||"")},
+  {h:"참여자신청", get:o=>o.fromParticipant?"예":"", set:(o,v)=>o.fromParticipant=(String(v).trim()==="예"||v===true||String(v).toUpperCase()==="TRUE")},
+  {h:"정산상태", get:o=>(o.settlement&&o.settlement.status)||"미정산", set:(o,v)=>{ if(!o.settlement)o.settlement={status:"미정산",items:[],note:""}; o.settlement.status=String(v||"미정산"); }},
+  {h:"담당매니저", get:o=>o.manager||"", set:(o,v)=>o.manager=String(v||"")},
+  {h:"연령대", get:o=>o.ageBand||"", set:(o,v)=>o.ageBand=String(v||"")},
+  {h:"규모", get:o=>o.scale||"", set:(o,v)=>o.scale=String(v||"")},
+  {h:"정산평가_일정", get:o=>settleEval(o).schedule||"", set:(o,v)=>{ if(!o.settlement.eval)o.settlement.eval={}; o.settlement.eval.schedule=String(v||""); }},
+  {h:"정산평가_충실도", get:o=>settleEval(o).faithfulness||"", set:(o,v)=>{ if(!o.settlement.eval)o.settlement.eval={}; o.settlement.eval.faithfulness=String(v||""); }},
+  {h:"정산평가_소통", get:o=>settleEval(o).communication||"", set:(o,v)=>{ if(!o.settlement.eval)o.settlement.eval={}; o.settlement.eval.communication=String(v||""); }},
+  {h:"결과보고상태", get:o=>o.reportStatus||"", set:(o,v)=>o.reportStatus=String(v||"")},
+  {h:"동의_수집이용", get:o=>(o.consents&&o.consents.collect)?"Y":"", set:(o,v)=>{ if(!o.consents)o.consents=blankConsents(); o.consents.collect=String(v).toUpperCase()==="Y"; }},
+  {h:"동의_제3자", get:o=>(o.consents&&o.consents.thirdParty)?"Y":"", set:(o,v)=>{ if(!o.consents)o.consents=blankConsents(); o.consents.thirdParty=String(v).toUpperCase()==="Y"; }},
+  {h:"동의_연구활용", get:o=>(o.consents&&o.consents.research)?"Y":"", set:(o,v)=>{ if(!o.consents)o.consents=blankConsents(); o.consents.research=String(v).toUpperCase()==="Y"; }},
+  {h:"동의_후속지원", get:o=>(o.consents&&o.consents.followup)?"Y":"", set:(o,v)=>{ if(!o.consents)o.consents=blankConsents(); o.consents.followup=String(v).toUpperCase()==="Y"; }},
+  {h:"동의_조사참여", get:o=>(o.consents&&o.consents.survey)?"Y":"", set:(o,v)=>{ if(!o.consents)o.consents=blankConsents(); o.consents.survey=String(v).toUpperCase()==="Y"; }},
+];
+function exportExcel(){
+  if(typeof XLSX==="undefined"){ alert("엑셀 기능을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요."); return; }
+  const rows=state.orgs.map(o=>{ const r={}; EXPORT_COLS.forEach(c=>r[c.h]=c.get(o)); return r; });
+  const ws=XLSX.utils.json_to_sheet(rows,{header:EXPORT_COLS.map(c=>c.h)});
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"참여자");
+  const maxLen=Math.max(state.settings.programs.length,state.settings.orgTypes.length,1), setRows=[];
+  for(let i=0;i<maxLen;i++) setRows.push({"참여사업":state.settings.programs[i]||"","기관유형":state.settings.orgTypes[i]||""});
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(setRows,{header:["참여사업","기관유형"]}), "설정");
+  const callHeader=["ID","제목","소개","신청대상","시작일","마감일","지원규모","모집정원","상태"];
+  const callAoa=[callHeader].concat(state.calls.map(c=>[c.id,c.title,c.desc,c.target,c.start,c.end,c.budget,c.capacity,c.status]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(callAoa), "공모사업");
+  const settleHeader=["참여자ID","항목","계획금액","집행금액","증빙"];
+  const settleAoa=[settleHeader];
+  state.orgs.forEach(o=>{ ((o.settlement&&o.settlement.items)||[]).forEach(it=>{ settleAoa.push([o.id,it.name,it.planned,it.spent,it.proof]); }); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(settleAoa), "정산");
+  XLSX.writeFile(wb, "사후관리_백업_"+new Date().toISOString().slice(0,10)+".xlsx");
+}
+function importExcel(input){
+  const file=input.files[0]; if(!file) return;
+  if(typeof XLSX==="undefined"){ alert("엑셀 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요."); input.value=""; return; }
+  if(!confirm("불러오면 현재 입력된 데이터가 파일 내용으로 모두 교체됩니다. 계속할까요?")){ input.value=""; return; }
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:"array"});
+      const ws=wb.Sheets["참여자"]||wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+      const orgs=rows.map(r=>{ const o=blankOrg("org"); EXPORT_COLS.forEach(c=>{ if(r[c.h]!==undefined)c.set(o,r[c.h]); }); return o; }).filter(o=>o.name);
+      const setWs=wb.Sheets["설정"];
+      if(setWs){ const sr=XLSX.utils.sheet_to_json(setWs,{defval:""});
+        const progs=[...new Set(sr.map(x=>String(x["참여사업"]||"").trim()).filter(Boolean))];
+        const types=[...new Set(sr.map(x=>String(x["기관유형"]||"").trim()).filter(Boolean))];
+        if(progs.length)state.settings.programs=progs;
+        if(types.length)state.settings.orgTypes=types;
+      }
+      const callWs=wb.Sheets["공모사업"];
+      if(callWs){ const cr=XLSX.utils.sheet_to_json(callWs,{defval:""});
+        const calls=cr.map(r=>({ id:String(r["ID"]||uidCall()), title:String(r["제목"]||""), desc:String(r["소개"]||""),
+          target:String(r["신청대상"]||"둘 다"), start:String(r["시작일"]||"").slice(0,10), end:String(r["마감일"]||"").slice(0,10),
+          budget:String(r["지원규모"]||""), capacity:String(r["모집정원"]||""), status:String(r["상태"]||"모집중"),
+          createdAt:new Date().toISOString().slice(0,10) })).filter(c=>c.title);
+        if(calls.length) state.calls=calls;
+      }
+      const setlWs=wb.Sheets["정산"];
+      if(setlWs){ const lr=XLSX.utils.sheet_to_json(setlWs,{defval:""}); const byId={};
+        lr.forEach(r=>{ const id=String(r["참여자ID"]||""); if(!id)return;
+          (byId[id]=byId[id]||[]).push({name:String(r["항목"]||""),planned:String(r["계획금액"]||""),spent:String(r["집행금액"]||""),proof:String(r["증빙"]||"")}); });
+        orgs.forEach(o=>{ if(byId[o.id]){ if(!o.settlement)o.settlement={status:"미정산",items:[],note:""}; o.settlement.items=byId[o.id]; } });
+      }
+      state.orgs=orgs; await saveStore(); input.value=""; state.view="list"; render();
+      alert(orgs.length+"건을 불러왔습니다.");
+    }catch(err){ alert("파일을 읽지 못했습니다. 이 시스템의 ‘내보내기’로 만든 엑셀 파일인지 확인해 주세요."); input.value=""; }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function fld(label,id,val,ph,type){ return `<div class="field"><label>${label}</label><input id="${id}" type="${type||"text"}" value="${esc(val)}" placeholder="${ph||""}"></div>`; }
+function area(label,id,val,ph){ return `<div class="field"><label>${label}</label><textarea id="${id}" placeholder="${ph||""}">${esc(val)}</textarea></div>`; }
+function sel(label,id,val,opts){ return `<div class="field"><label>${label}</label><select id="${id}">${opts.map(op=>`<option ${val===op?"selected":""}>${op}</option>`).join("")}</select></div>`; }
+
+function viewDetail(){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o) return viewList();
+  const eff=effectiveClass(o), st=state.activeStage, isInd=o.kind==="individual";
+  const meta = isInd ? `${esc(o.affiliation||"소속 미입력")} · ${esc(regionStr(o)||"지역 미입력")}`
+                     : `${esc(o.type||"유형 미입력")} · ${esc(regionStr(o)||"지역 미입력")} · 설립 ${esc(o.founded||"-")}`;
+  const steps=STAGES.map((s,i)=>`<div class="stage-step ${i===st?"on":""} ${i<o.stage?"done":""}" onclick="state.activeStage=${i};render()">
+    <span class="num">${i+1}</span><span class="stp-lbl">${s}</span></div>`).join("");
+  return `
+  <button class="back-link" onclick="go('list')">← 목록으로</button>
+  <div class="panel">
+    <div class="detail-head">
+      <div class="avatar">${esc(initials(o.name))}</div>
+      <div><div class="nm">${esc(o.name||"(이름없음)")}</div><div class="meta">${meta}</div></div>
+      <div class="badges">${kindTag(o.kind)}${classBadge(eff)}${settlePoor(o)?'<span class="flag-warn">정산평가 주의</span>':''}<span class="stage-tag">현재: ${STAGES[o.stage]}</span></div>
+    </div>
+    <div class="id-line">ID ${esc(o.id)} · 참여사업 ${esc(o.program||"-")} · 카드 생성 ${esc(o.createdAt)}</div>
+    <div class="stage-bar">${steps}</div>
+    <div class="field-row">
+      <div class="field"><label>현재 진행 단계</label>
+        <select id="d_stage">${STAGES.map((s,i)=>`<option value="${i}" ${o.stage===i?"selected":""}>${s}</option>`).join("")}</select></div>
+      <div class="field"><label>담당 매니저</label><select id="d_manager">${selOpts(state.settings.managers,o.manager)}</select></div>
+    </div>
+    <div class="field"><label>개인정보 동의 현황</label>${consentTags(o)}</div>
+    <div class="hint">단계를 진행시키면 목록·대시보드에 반영됩니다.</div>
+    ${stagePanel(o,st)}
+    <div class="save-bar">
+      <button class="btn primary" onclick="saveDetail()">저장</button>
+      <button class="btn danger" onclick="deleteOrg()">삭제</button>
+      <span class="saved-msg" id="savedMsg">저장되었습니다</span>
+    </div>
+  </div>`;
+}
+
+function stagePanel(o,st){
+  const isInd=o.kind==="individual";
+  if(st===0){
+    const ident = isInd
+      ? `<div class="field-row">${fld("성명","d_name",o.name)}${fld("소속","d_affil",o.affiliation)}</div>
+         ${fld("연락처","d_contact",o.contact)}`
+      : `${fld("기관·기업명","d_name",o.name)}
+         <div class="field-row"><div class="field"><label>기관 유형</label><select id="d_type">${selOpts(state.settings.orgTypes,o.type)}</select></div>
+         ${fld("설립연도","d_founded",o.founded)}</div>
+         <div class="field-row">${fld("대표자","d_rep",o.rep)}${fld("연락처","d_contact",o.contact)}</div>`;
+    return `${ident}
+      ${regionSelects("d_sido","d_gu",o.sido,o.sigungu)}
+      <div class="field"><label>참여 사업</label><select id="d_program">${selOpts(callTitles(),o.program)}</select></div>
+      ${area("신청 동기·욕구","d_motive",o.apply.motive,"예: 방과후 프로그램 확대, 운영비 부족")}
+      ${fld("요청 예산(원)","d_budget",o.apply.budget,"예: 12,000,000")}
+      <div class="field"><label>신청 첨부파일</label>
+        ${fileListHtml(o.attachments,"removeAttach")}
+        <div class="uploader"><button class="btn sm" onclick="document.getElementById('cardAttachInput').click()">+ 파일 추가</button>
+        <input type="file" id="cardAttachInput" multiple style="display:none" onchange="addCardFile(this,'attachments')"></div></div>
+      ${demographicField(o)}
+      ${kpiPanel(o,'target')}`;
+  }
+  if(st===1) return `<div class="field-row">${fld("서류심사 점수","d_doc",o.review.doc)}${fld("면접심사 점수","d_interview",o.review.interview)}</div>
+    ${sel("선정 결과","d_result",o.review.result||"선정",["선정","미선정","보류"])}
+    ${area("평가위원 의견","d_opinion",o.review.opinion,"예: 사업계획 구체적, 회계역량 보완 필요")}`;
+  if(st===2) return `<div class="field-row">${fld("멘토링 진행 횟수","d_mentoring",o.progress.mentoring,"예: 4회")}${fld("예산 집행률(%)","d_exec",o.progress.exec,"예: 87")}</div>
+    ${fld("현장점검 결과","d_inspection",o.progress.inspection,"예: 1회 · 양호")}
+    ${area("중간 이슈","d_issue",o.progress.issue,"예: 회계 정산 지연 1건")}`;
+  if(st===3) return `${sel("결과보고 제출","d_report",o.closing.report?"제출 완료":"미제출",["미제출","제출 완료"])}
+    ${area("핵심 성과","d_performance",o.closing.performance,"예: 참여인원 35명 · 만족도 4.3/5")}
+    <div class="field"><label>결과 파일 업로드 (결과보고서·사진 등 · 파일당 최대 3MB)</label>
+      ${fileListHtml(o.resultFiles,"removeResult")}
+      <div class="uploader"><button class="btn sm" onclick="document.getElementById('cardResultInput').click()">+ 파일 추가</button>
+      <input type="file" id="cardResultInput" multiple style="display:none" onchange="addCardFile(this,'resultFiles')"></div></div>
+    ${o.reportStatus?`<div class="field"><label>결과보고 검토</label>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="flag-warn" style="${o.reportStatus==='approved'?'background:var(--t-general-bg);color:var(--t-general)':o.reportStatus==='submitted'?'background:var(--t-intensive-bg);color:var(--t-intensive)':''}">${o.reportStatus==='approved'?'승인됨':o.reportStatus==='rejected'?'반려됨':'검토 대기'}</span>
+        <button class="btn sm" onclick="approveReport()">승인</button>
+        <button class="btn sm danger" onclick="rejectReport()">반려</button>
+      </div>${o.reportStatus==='rejected'&&o.reportRejectReason?`<div class="hint" style="margin-top:6px">반려 사유: ${esc(o.reportRejectReason)}</div>`:""}</div>`:""}
+    ${kpiPanel(o,'actual')}
+    <h3 style="margin:22px 0 4px;font-size:14px">5축 진단</h3>
+    <div class="hint">각 항목을 평가하면 사후관리 분류가 자동 계산됩니다.</div>
+    <div class="diag-grid">${AXES.map(a=>`<div class="diag-item"><label>${a.label}</label>
+      <select id="sc_${a.k}" onchange="liveClass()"><option value="0" ${o.scores[a.k]===0?"selected":""}>선택</option>
+      ${[1,2,3].map(n=>`<option value="${n}" ${o.scores[a.k]===n?"selected":""}>${SCORE_OPT[n]}</option>`).join("")}</select></div>`).join("")}</div>
+    ${classResult(o)}
+    ${settlementPanel(o)}`;
+  if(st===4) return `${classResult(o)}
+    ${sel("분류 수동 지정 (선택)","d_manual",o.followup.manual||"자동 분류 사용",["자동 분류 사용","성장연계","집중관리","일반 모니터링","관찰"])}
+    ${area("후속지원 이력","d_support",o.followup.support,"예: 회계사 멘토링 2회 연계")}
+    ${fld("재단 사업 연계","d_linkage",o.followup.linkage,"예: '회계교육' 사업 추천")}
+    ${fld("다음 접촉 예정일","d_next",o.followup.next,"","date")}
+    ${activityPanel(o)}`;
+  return "";
+}
+
+function num(v){ const n=parseFloat(String(v==null?"":v).replace(/[^0-9.-]/g,"")); return isNaN(n)?0:n; }
+function settleTotalsHtml(s){
+  const tp=s.items.reduce((a,it)=>a+num(it.planned),0), ts=s.items.reduce((a,it)=>a+num(it.spent),0);
+  const rate=tp>0?Math.round(ts/tp*100):0, bal=tp-ts;
+  return `<span>총 계획 <b>${tp.toLocaleString()}원</b></span><span>총 집행 <b>${ts.toLocaleString()}원</b></span><span>집행률 <b>${rate}%</b></span><span>잔액(반환 대상) <b style="${bal<0?'color:#a32d2d':''}">${bal.toLocaleString()}원</b></span>`;
+}
+function settlementPanel(o){
+  if(!o.settlement) o.settlement={status:"미정산",items:[],note:""};
+  if(!o.settlement.eval) o.settlement.eval={schedule:"",faithfulness:"",communication:"",note:""};
+  const s=o.settlement;
+  const rows=s.items.map((it,i)=>`<div class="settle-row">
+    <input id="st_name_${i}" value="${esc(it.name||"")}" placeholder="항목명" oninput="settlementSync()">
+    <input id="st_plan_${i}" value="${esc(it.planned||"")}" placeholder="계획금액" inputmode="numeric" oninput="settlementSync()">
+    <input id="st_spent_${i}" value="${esc(it.spent||"")}" placeholder="집행금액" inputmode="numeric" oninput="settlementSync()">
+    <input id="st_proof_${i}" value="${esc(it.proof||"")}" placeholder="증빙(메모·링크)" oninput="settlementSync()">
+    <button class="settle-del" onclick="removeSettleRow(${i})" title="삭제">×</button></div>`).join("");
+  return `
+    <h3 style="margin:22px 0 4px;font-size:14px">사업비 정산</h3>
+    <div class="hint">항목별 계획·집행 금액을 넣으면 집행률·잔액이 자동 계산됩니다. 증빙 칸엔 메모나 드라이브 링크를 적어두세요.</div>
+    <div class="field" style="max-width:200px"><label>정산 상태</label><select id="st_status">${["미정산","정산중","정산완료"].map(x=>`<option ${s.status===x?"selected":""}>${x}</option>`).join("")}</select></div>
+    ${s.items.length?`<div class="settle-head"><span>항목</span><span>계획금액</span><span>집행금액</span><span>증빙(메모·링크)</span><span></span></div>`:""}
+    <div id="settleRows">${rows}</div>
+    <button class="btn sm" onclick="addSettleRow()" style="margin:4px 0 12px">+ 항목 추가</button>
+    <div class="settle-totals" id="settleTotals">${settleTotalsHtml(s)}</div>
+    <h3 style="margin:20px 0 4px;font-size:14px">정산·프로젝트 평가</h3>
+    <div class="hint">평가가 미흡하면 카드에 ‘정산평가 주의’ 플래그가 떠 집중관리 검토로 이어집니다.</div>
+    <div class="diag-grid">${SETTLE_EVAL.map(x=>`<div class="diag-item"><label>${x.label}</label>
+      <select id="se_${x.k}" onchange="settlementSync()"><option value="">선택</option>${x.opts.map(op=>`<option ${(s.eval[x.k]||"")===op?"selected":""}>${op}</option>`).join("")}</select></div>`).join("")}</div>
+    ${area("기타 특이사항(환수 등)","se_note",s.eval.note||"","예: 정산 대상 아님 / 환수 발생")}
+    ${settlePoor(o)?'<div class="flag-warn" style="margin-top:-6px">정산 평가가 미흡합니다. 집중관리 검토를 권합니다.</div>':''}`;
+}
+function settlementSync(){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o||!o.settlement)return;
+  o.settlement.items.forEach((it,i)=>{
+    const gv=id=>{const e=document.getElementById(id);return e?e.value:undefined;};
+    const nm=gv("st_name_"+i), pl=gv("st_plan_"+i), sp=gv("st_spent_"+i), pr=gv("st_proof_"+i);
+    if(nm!==undefined)it.name=nm; if(pl!==undefined)it.planned=pl; if(sp!==undefined)it.spent=sp; if(pr!==undefined)it.proof=pr;
+  });
+  const st=document.getElementById("st_status"); if(st)o.settlement.status=st.value;
+  if(!o.settlement.eval)o.settlement.eval={};
+  SETTLE_EVAL.forEach(x=>{ const e=document.getElementById("se_"+x.k); if(e)o.settlement.eval[x.k]=e.value; });
+  const en=document.getElementById("se_note"); if(en)o.settlement.eval.note=en.value;
+  const tot=document.getElementById("settleTotals"); if(tot)tot.innerHTML=settleTotalsHtml(o.settlement);
+}
+function addSettleRow(){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return; if(!o.settlement)o.settlement={status:"미정산",items:[],note:""}; settlementSync(); o.settlement.items.push({name:"",planned:"",spent:"",proof:""}); render(); }
+function removeSettleRow(i){ const o=state.orgs.find(x=>x.id===state.activeId); if(!o||!o.settlement)return; settlementSync(); o.settlement.items.splice(i,1); render(); }
+
+function classResult(o){
+  const c=computeClass(o), m=CLASS_META[c.label];
+  return `<div class="class-result" id="classResult">
+    <div class="row"><span class="badge ${m.cls}" style="font-size:13px">${c.label}</span>
+      <span class="axis">안정성 <b>${c.stability!=null?c.stability+"/6":"-"}</b></span>
+      <span class="axis">잠재력 <b>${c.potential!=null?c.potential+"/9":"-"}</b></span></div>
+    <div class="class-note">${c.filled?classExplain(c.label):"5축 진단을 모두 입력하면 자동으로 분류됩니다."}</div>
+  </div>`;
+}
+function classExplain(label){
+  return {
+    "성장연계":"안정적이고 잠재력이 높습니다. 재단 타사업 연계, 우수사례·네트워크 허브, 모금 스토리 대상으로 권장합니다.",
+    "집중관리":"잠재력은 높으나 안정성이 낮습니다. 멘토·회계사 연계와 분기 점검 등 후속지원을 우선 배정합니다.",
+    "일반 모니터링":"안정적이며 추가 욕구가 적습니다. 반기 1회 안부·콘텐츠 제공 수준으로 관리합니다.",
+    "관찰":"안정성·잠재력이 모두 낮습니다. 기본 모니터링과 필요 시 역량강화 지원을 검토합니다.",
+  }[label]||"";
+}
+function liveClass(){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return;
+  AXES.forEach(a=>{ const el=document.getElementById("sc_"+a.k); if(el)o.scores[a.k]=parseInt(el.value)||0; });
+  const cr=document.getElementById("classResult"); if(cr) cr.outerHTML=classResult(o);
+}
+
+async function saveDetail(){
+  const o=state.orgs.find(x=>x.id===state.activeId); if(!o)return;
+  const g=id=>{const e=document.getElementById(id);return e?e.value:undefined;};
+  const sg=document.getElementById("d_stage"); if(sg)o.stage=parseInt(sg.value);
+  const mg=document.getElementById("d_manager"); if(mg)o.manager=mg.value;
+  const st=state.activeStage, isInd=o.kind==="individual";
+  if(st===0){ o.name=g("d_name")??o.name; o.contact=g("d_contact")??o.contact;
+    o.sido=g("d_sido")??o.sido; o.sigungu=g("d_gu")??o.sigungu; o.program=g("d_program")??o.program;
+    o.apply.motive=g("d_motive")??o.apply.motive; o.apply.budget=g("d_budget")??o.apply.budget;
+    if(isInd){ o.affiliation=g("d_affil")??o.affiliation; o.ageBand=g("d_age")??o.ageBand; }
+    else { o.type=g("d_type")??o.type; o.founded=g("d_founded")??o.founded; o.rep=g("d_rep")??o.rep; o.scale=g("d_scale")??o.scale; }
+    kpiSync(); }
+  if(st===1){ o.review.doc=g("d_doc")??""; o.review.interview=g("d_interview")??""; o.review.result=g("d_result")??""; o.review.opinion=g("d_opinion")??""; }
+  if(st===2){ o.progress.mentoring=g("d_mentoring")??""; o.progress.exec=g("d_exec")??""; o.progress.inspection=g("d_inspection")??""; o.progress.issue=g("d_issue")??""; }
+  if(st===3){ o.closing.report=(g("d_report")==="제출 완료"); o.closing.performance=g("d_performance")??"";
+    AXES.forEach(a=>{ const e=document.getElementById("sc_"+a.k); if(e)o.scores[a.k]=parseInt(e.value)||0; }); kpiSync(); settlementSync(); }
+  if(st===4){ const man=g("d_manual"); o.followup.manual=(man&&man!=="자동 분류 사용")?man:"";
+    o.followup.support=g("d_support")??""; o.followup.linkage=g("d_linkage")??""; o.followup.next=g("d_next")??""; }
+  await saveStore();
+  const msg=document.getElementById("savedMsg"); if(msg){ msg.classList.add("show"); setTimeout(()=>msg.classList.remove("show"),1600); }
+  const o2=state.orgs.find(x=>x.id===state.activeId);
+  document.querySelector(".detail-head .badges").innerHTML=kindTag(o2.kind)+classBadge(effectiveClass(o2))+(settlePoor(o2)?'<span class="flag-warn">정산평가 주의</span>':'')+`<span class="stage-tag">현재: ${STAGES[o2.stage]}</span>`;
+}
+async function deleteOrg(){
+  if(!confirm("이 카드를 삭제할까요? 되돌릴 수 없습니다.")) return;
+  state.orgs=state.orgs.filter(x=>x.id!==state.activeId); await saveStore(); go("list");
+}
+
+function seed(){
+  const a=blankOrg("org");
+  Object.assign(a,{ id:"FND-2024-0137", name:"햇살지역아동센터", type:"지역아동센터", sido:"서울특별시", sigungu:"구로구",
+    founded:"2016", rep:"김OO", contact:"02-000-0000", program:"모두의공모 2024", callId:"CALL-2024-01", accountId:"ACC-DEMO", fromParticipant:true, stage:4, createdAt:"2024-03-04",
+    apply:{motive:"방과후 프로그램 확대, 운영비 부족", budget:"12,000,000"},
+    review:{doc:"82", interview:"78", result:"선정", opinion:"사업계획 구체적, 회계역량 보완 필요"},
+    progress:{mentoring:"4회", exec:"87", inspection:"1회 · 양호", issue:"회계 정산 지연 1건"},
+    closing:{report:true, performance:"참여아동 35명 · 만족도 4.3/5"},
+    scores:{accounting:2, execution:3, outcome:3, sustainability:2, linkage:3},
+    followup:{manual:"", support:"회계사 멘토링 2회 연계", linkage:"'회계교육' 사업 추천", next:"2025-03-15"},
+    settlement:{status:"정산완료", eval:{schedule:"기간 내 진행",faithfulness:"충실히 진행",communication:"매우 원활",note:""}, items:[
+      {name:"강사비", planned:"6000000", spent:"5800000", proof:"영수증 8건 · 드라이브 링크"},
+      {name:"교재·재료비", planned:"4000000", spent:"4000000", proof:"세금계산서 3건"},
+      {name:"운영비", planned:"2000000", spent:"1900000", proof:"카드영수증"} ] },
+    scale:"1~5억", manager:"이채림",
+    consents:{collect:true,thirdParty:true,research:true,followup:true,survey:true,agreedAt:"2024-03-04",version:"1.0"},
+    kpis:[{name:"참여 아동 수",target:"30",actual:"35"},{name:"프로그램 만족도(5점)",target:"4.0",actual:"4.3"}],
+    activities:[{date:"2024-11-20",type:"방문",note:"종료 현장점검 · 성과 양호"},{date:"2025-01-15",type:"연락",note:"회계교육 사업 안내, 관심 표명"}],
+    reportStatus:"approved" });
+  const b=blankOrg("individual");
+  Object.assign(b,{ id:"FND-2025-0042", name:"이OO", affiliation:"프리랜서 디자이너", sido:"경기도", sigungu:"성남시",
+    contact:"010-0000-0000", program:"모두의공모 2025", stage:2, createdAt:"2025-02-10",
+    apply:{motive:"지역 청년 창작 활동 지원 희망", budget:"3,000,000"},
+    review:{doc:"75", interview:"80", result:"선정", opinion:"창작 역량 우수, 사업 경험은 부족"},
+    progress:{mentoring:"2회", exec:"40", inspection:"미실시", issue:""},
+    closing:{report:false, performance:""}, scores:{accounting:0,execution:0,outcome:0,sustainability:0,linkage:0},
+    followup:{manual:"", support:"", linkage:"", next:""} });
+  return [a,b];
+}
+
+function seedCalls(){
+  return [
+    { id:"CALL-2024-01", title:"모두의공모 2024", desc:"지역 비영리단체의 방과후·돌봄 사업을 지원합니다.", target:"둘 다", start:"2024-02-01", end:"2024-03-15", budget:"최대 1,200만원", capacity:"20팀", status:"마감", createdAt:"2024-01-20" },
+    { id:"CALL-2025-01", title:"모두의공모 2025", desc:"청년·창작자와 단체의 지역 활동을 지원합니다.", target:"둘 다", start:"2025-01-15", end:"2026-12-31", budget:"최대 1,000만원", capacity:"25팀", status:"모집중", createdAt:"2025-01-05" },
+  ];
+}
+
+function seedAccounts(){
+  return [
+    { id:"ACC-DEMO", loginId:"hamkke", password:"hamkke2026", kind:"org", name:"햇살지역아동센터",
+      type:"지역아동센터", affiliation:"", founded:"2016", rep:"김OO", contact:"02-000-0000",
+      sido:"서울특별시", sigungu:"구로구", scale:"1~5억", ageBand:"",
+      consents:{collect:true,thirdParty:true,research:true,followup:true,survey:true,agreedAt:"2024-02-20",version:"1.0"},
+      createdAt:"2024-02-20" },
+  ];
+}
+
+(async function init(){
+  const data=await loadStore();
+  if(data){
+    if(Array.isArray(data)){ state.orgs=data; state.settings=defaultSettings(); state.calls=seedCalls(); state.accounts=seedAccounts(); }
+    else { state.orgs=data.orgs||[]; state.settings=Object.assign(defaultSettings(),data.settings||{}); state.calls=(data.calls&&data.calls.length!==undefined)?data.calls:seedCalls(); state.accounts=(data.accounts&&data.accounts.length!==undefined)?data.accounts:seedAccounts(); }
+  } else { state.orgs=seed(); state.settings=defaultSettings(); state.calls=seedCalls(); state.accounts=seedAccounts(); await saveStore(); }
+  if(state.settings.orgTypes && !state.settings.orgTypes.includes("기타")) state.settings.orgTypes.push("기타");
+  if(!state.settings.managers) state.settings.managers=["이채림"];
+  state.orgs.forEach(o=>{ if(!o.kind)o.kind="org"; if(o.affiliation===undefined)o.affiliation=""; if(o.sido===undefined){o.sido="";o.sigungu="";} if(o.callId===undefined)o.callId=""; if(o.accountId===undefined)o.accountId=""; if(o.fromParticipant===undefined)o.fromParticipant=false; if(!o.settlement)o.settlement={status:"미정산",items:[],note:""}; if(!o.settlement.eval)o.settlement.eval={schedule:"",faithfulness:"",communication:"",note:""}; if(!o.attachments)o.attachments=[]; if(!o.resultFiles)o.resultFiles=[]; if(o.ageBand===undefined)o.ageBand=""; if(o.scale===undefined)o.scale=""; if(!o.consents)o.consents=blankConsents(); if(o.manager===undefined)o.manager=""; if(!o.kpis)o.kpis=[]; if(!o.activities)o.activities=[]; if(o.reportStatus===undefined)o.reportStatus=""; if(o.reportRejectReason===undefined)o.reportRejectReason=""; });
+  state.accounts.forEach(a=>{ if(!a.consents)a.consents=blankConsents(); if(a.ageBand===undefined)a.ageBand=""; if(a.scale===undefined)a.scale=""; });
+  render();
+})();
+</script>
+</body>
+</html>
