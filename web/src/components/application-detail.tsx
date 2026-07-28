@@ -36,7 +36,7 @@ export function ApplicationDetail({ app, call }: { app: Application; call?: Call
   return (
     <>
       <Link
-        href="/admin/applications"
+        href="/applications"
         className="text-[13px] text-muted hover:text-text inline-block mb-3"
       >
         ← 참여자 목록
@@ -87,14 +87,15 @@ export function ApplicationDetail({ app, call }: { app: Application; call?: Call
         <Panel title="신청">
           <div className="grid sm:grid-cols-2 gap-x-6">
             <Field label="기관·개인명" value={app.applicant.name} />
+            <Field label="세부 유형" value={app.applicant.type} />
+            <Field label="사업 분야" value={app.applicant.sector} />
             <Field
-              label={app.applicant.kind === 'individual' ? '소속' : '기관 유형'}
+              label={app.applicant.kind === 'individual' ? '소속' : '대표자'}
               value={
-                app.applicant.kind === 'individual'
-                  ? app.applicant.affiliation
-                  : app.applicant.orgType
+                app.applicant.kind === 'individual' ? app.applicant.affiliation : app.applicant.rep
               }
             />
+            <Field label="이메일" value={app.applicant.email} />
             <Field label="연락처" value={app.applicant.contact} />
             <Field
               label="지역"

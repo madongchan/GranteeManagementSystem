@@ -8,6 +8,7 @@ import Link from 'next/link'
 import type { Classification, Status } from '@/lib/types'
 import { CLASS_STYLE } from '@/lib/domain/classify'
 import { STATUS_LABEL, STATUS_STYLE } from '@/lib/domain/stage'
+import { kindLabel, type KindKey } from '@/lib/taxonomy'
 
 /** 흰 카드 */
 export function Panel({
@@ -86,11 +87,11 @@ export function StatusBadge({ status }: { status: Status }) {
   )
 }
 
-/** 기관·기업 / 개인 구분 태그 */
-export function KindTag({ kind }: { kind: 'org' | 'individual' }) {
+/** 개인 / 기관·단체 / 기업 구분 태그 */
+export function KindTag({ kind }: { kind: KindKey }) {
   return (
     <span className="inline-block px-[7px] py-[2px] rounded text-[11.5px] bg-[#f1efe8] text-muted">
-      {kind === 'individual' ? '개인' : '기관·기업'}
+      {kindLabel(kind)}
     </span>
   )
 }

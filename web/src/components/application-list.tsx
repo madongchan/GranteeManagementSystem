@@ -13,6 +13,7 @@ import { ClassBadge, Empty, KindTag, Panel } from '@/components/ui'
 import { ALL_CLASSES, effectiveClass } from '@/lib/domain/classify'
 import { STAGES, stageLabel } from '@/lib/domain/stage'
 import { isSettlementPoor } from '@/lib/domain/settlement'
+import { KINDS, SECTORS } from '@/lib/taxonomy'
 
 /** 동의 항목별 대상자 추출 — 재단이 안내 메일을 보낼 때 쓰는 기능 */
 const CONSENT_FILTERS = [
@@ -35,6 +36,7 @@ export function ApplicationList({
   const [stage, setStage] = useState(initialStage)
   const [klass, setKlass] = useState('all')
   const [kind, setKind] = useState('all')
+  const [sector, setSector] = useState('all')
   const [consent, setConsent] = useState('all')
 
   const filtered = useMemo(() => {
@@ -42,6 +44,7 @@ export function ApplicationList({
       if (stage !== 'all' && a.stage !== stage) return false
       if (klass !== 'all' && effectiveClass(a) !== klass) return false
       if (kind !== 'all' && a.applicant.kind !== kind) return false
+      if (sector !== 'all' && a.applicant.sector !== sector) return false
       if (consent !== 'all' && !a.applicant.consents[consent as 'followup']) return false
 
       if (query.trim()) {
@@ -49,7 +52,8 @@ export function ApplicationList({
         const haystack = [
           a.applicant.name,
           a.displayNo,
-          a.applicant.orgType,
+          a.applicant.type,
+          a.applicant.sector,
           a.applicant.sido,
           a.applicant.sigungu,
           a.manager,
@@ -61,7 +65,7 @@ export function ApplicationList({
       }
       return true
     })
-  }, [apps, query, stage, klass, kind, consent])
+  }, [apps, query, stage, klass, kind, sector, consent])
 
   const selectCls =
     'border border-line rounded-[7px] px-2.5 py-2 text-[13px] bg-surface focus:outline-none focus:border-accent'
@@ -94,8 +98,19 @@ export function ApplicationList({
           </select>
           <select value={kind} onChange={(e) => setKind(e.target.value)} className={selectCls}>
             <option value="all">전체 구분</option>
-            <option value="org">기관·기업</option>
-            <option value="individual">개인</option>
+            {KINDS.map((k) => (
+              <option key={k.key} value={k.key}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+          <select value={sector} onChange={(e) => setSector(e.target.value)} className={selectCls}>
+            <option value="all">전체 분야</option>
+            {SECTORS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
           <select value={consent} onChange={(e) => setConsent(e.target.value)} className={selectCls}>
             {CONSENT_FILTERS.map((c) => (
@@ -136,7 +151,7 @@ export function ApplicationList({
                   return (
                     <tr key={a.id} className="hover:bg-[#faf9f6]">
                       <td className="px-4 py-3">
-                        <Link href={`/admin/applications/${a.id}`} className="hover:text-accent">
+                        <Link href={`/applications/${a.id}`} className="hover:text-accent">
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium">{a.applicant.name}</span>
                             <KindTag kind={a.applicant.kind} />

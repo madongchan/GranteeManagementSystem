@@ -79,10 +79,13 @@ export function ApplyForm({ call, account }: { call: Call; account: Account }) {
         </p>
         <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-2.5 text-[13.5px]">
           <Row label={account.kind === 'individual' ? '성명' : '기관·기업명'} value={account.name} />
+          <Row label="세부 유형" value={account.type} />
+          <Row label="사업 분야" value={account.sector} />
           <Row
-            label={account.kind === 'individual' ? '소속' : '기관 유형'}
-            value={account.kind === 'individual' ? account.affiliation : account.orgType}
+            label={account.kind === 'individual' ? '소속' : '대표자'}
+            value={account.kind === 'individual' ? account.affiliation : account.rep}
           />
+          <Row label="이메일" value={account.email} />
           <Row label="연락처" value={account.contact} />
           <Row label="지역" value={[account.sido, account.sigungu].filter(Boolean).join(' ')} />
         </dl>

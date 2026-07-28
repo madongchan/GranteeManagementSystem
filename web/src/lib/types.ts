@@ -4,6 +4,7 @@
  * 유니티로 치면 ScriptableObject / 직렬화 클래스 정의에 해당합니다.
  * 나중에 DB를 붙일 때도 이 모양은 그대로 씁니다.
  */
+import type { KindKey, Sector } from '@/lib/taxonomy'
 
 /** 내부 진행 단계 (관리자가 보는 것) */
 export type Stage = 'applied' | 'review' | 'in_progress' | 'closed' | 'aftercare'
@@ -11,8 +12,8 @@ export type Stage = 'applied' | 'review' | 'in_progress' | 'closed' | 'aftercare
 /** 참여자에게 보이는 상태 */
 export type Status = 'received' | 'reviewing' | 'selected' | 'rejected'
 
-/** 기관인지 개인인지 */
-export type Kind = 'org' | 'individual'
+/** 신청 주체 — 개인 / 기관·단체 / 기업 (세부 목록은 taxonomy.ts) */
+export type Kind = KindKey
 
 /** 5축 진단 점수. 0 = 미입력, 1 = 미흡, 2 = 보통, 3 = 우수 */
 export type Score = 0 | 1 | 2 | 3
@@ -40,17 +41,23 @@ export interface Consents {
 export interface Account {
   id: string
   kind: Kind
-  name: string           // 기관명 또는 성명
-  orgType?: string       // 기관 유형
-  affiliation?: string   // 개인 소속
-  founded?: string
-  rep?: string           // 대표자
-  contact?: string
+  name: string           // 기관·기업명 또는 성명
+  type: string           // 세부 유형 — 신청 주체에 따라 목록이 다름 (taxonomy.ts)
+  sector: Sector | ''    // 주 사업 분야 (아동·청소년, 노인 …)
+
+  // 관리자가 조회·수집하는 기본 정보
+  email: string
+  contact: string
+  birthDate: string      // 개인은 생년월일, 기관·기업은 설립일
+
+  rep?: string           // 대표자 (기관·기업)
+  affiliation?: string   // 소속 (개인)
   sido?: string
   sigungu?: string
   ageBand?: string       // 개인: 연령대
-  scaleBand?: string     // 기관: 규모
+  scaleBand?: string     // 기관·기업: 규모
   consents: Consents
+  createdAt: string      // 가입일
 }
 
 /** 공모사업 */
@@ -58,12 +65,18 @@ export interface Call {
   id: string
   title: string
   description: string
-  target: 'org' | 'individual' | 'both'
+  /** 지원 대상 — 비우면 전체 대상 */
+  targets: Kind[]
+  /** 관련 사업 분야 */
+  sectors: Sector[]
   startDate: string
   endDate: string
   budget: string
   capacity: string
   status: 'open' | 'closed'
+  /** 대표 이미지(공고 이미지). 관리자가 올립니다.
+   *  없으면 제목을 바탕으로 만든 기본 이미지가 대신 보입니다. */
+  image?: string
 }
 
 /** 성과지표 */

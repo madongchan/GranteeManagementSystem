@@ -48,7 +48,7 @@ export default function DashboardPage() {
             label={s.label}
             value={apps.filter((a) => a.stage === s.key).length}
             unit="건"
-            href={`/admin/applications?stage=${s.key}`}
+            href={`/applications?stage=${s.key}`}
           />
         ))}
       </div>
@@ -63,7 +63,7 @@ export default function DashboardPage() {
               {pending.map((a) => (
                 <li key={a.id}>
                   <Link
-                    href={`/admin/applications/${a.id}`}
+                    href={`/applications/${a.id}`}
                     className="flex items-center gap-2 py-2.5 hover:text-accent"
                   >
                     <span className="flex-1 text-[13.5px]">{a.applicant.name}</span>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
               {overdue.map((a) => (
                 <li key={a.id}>
                   <Link
-                    href={`/admin/applications/${a.id}`}
+                    href={`/applications/${a.id}`}
                     className="flex items-center gap-2 py-2.5 hover:text-accent"
                   >
                     <span className="flex-1 text-[13.5px]">{a.applicant.name}</span>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
               {poorSettlement.map((a) => (
                 <li key={a.id}>
                   <Link
-                    href={`/admin/applications/${a.id}`}
+                    href={`/applications/${a.id}`}
                     className="flex items-center gap-2 py-2.5 hover:text-accent"
                   >
                     <span className="flex-1 text-[13.5px]">{a.applicant.name}</span>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
               {rejectedReports.map((a) => (
                 <li key={a.id}>
                   <Link
-                    href={`/admin/applications/${a.id}`}
+                    href={`/applications/${a.id}`}
                     className="block py-2.5 hover:text-accent"
                   >
                     <span className="text-[13.5px]">{a.applicant.name}</span>
