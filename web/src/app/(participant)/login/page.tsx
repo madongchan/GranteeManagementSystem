@@ -22,12 +22,15 @@ const ERROR_MESSAGE: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; next?: string }>
 }) {
-  // 이미 로그인했으면 내 신청 내역으로
-  if (await getSession()) redirect('/my')
+  const { error, next } = await searchParams
 
-  const { error } = await searchParams
+  // 로그인 뒤 돌아갈 곳. 우리 사이트 안의 경로만 받습니다.
+  const back = next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
+
+  // 이미 로그인했으면 원래 가려던 곳으로
+  if (await getSession()) redirect(back)
   const configured = isGoogleConfigured()
   const demoAllowed = isDemoLoginAllowed()
 
@@ -36,7 +39,7 @@ export default async function LoginPage({
       <div className="text-center mb-9">
         <h1 className="text-[26px] font-semibold tracking-[-0.5px] mb-2">로그인</h1>
         <p className="text-muted text-sm">
-          내 신청 내역을 보려면 로그인이 필요합니다.
+          공모사업에 지원하거나 내 신청 내역을 보려면 로그인이 필요합니다.
         </p>
       </div>
 
@@ -49,7 +52,7 @@ export default async function LoginPage({
       <div className="bg-surface border border-line rounded-[10px] px-7 py-8">
         {/* 구글 로그인 */}
         <a
-          href="/api/auth/google"
+          href={`/api/auth/google?next=${encodeURIComponent(back)}`}
           className={`flex items-center justify-center gap-2.5 w-full border border-line rounded-[7px] py-3 text-sm font-medium bg-white transition-colors ${
             configured ? 'hover:border-line2' : 'opacity-45 pointer-events-none'
           }`}
@@ -75,6 +78,7 @@ export default async function LoginPage({
             </div>
 
             <form action="/api/auth/demo" method="post" className="space-y-2">
+              <input type="hidden" name="next" value={back} />
               <label className="block text-[12.5px] text-muted mb-1.5">
                 어느 참여자로 볼지 고르세요
               </label>

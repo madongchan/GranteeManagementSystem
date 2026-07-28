@@ -20,7 +20,7 @@ import { SECTORS } from '@/lib/taxonomy'
 /** 한 번에 보여줄 카드 수 */
 const PAGE_SIZE = 8
 
-export function CallSearch({ calls }: { calls: Call[] }) {
+export function CallSearch({ calls, isLoggedIn }: { calls: Call[]; isLoggedIn: boolean }) {
   const [query, setQuery] = useState('')
   const [detailOpen, setDetailOpen] = useState(true)
   const [sectors, setSectors] = useState<Set<string>>(new Set())
@@ -28,6 +28,9 @@ export function CallSearch({ calls }: { calls: Call[] }) {
   const [callName, setCallName] = useState('')
   const [sort, setSort] = useState('all')
   const [shown, setShown] = useState(PAGE_SIZE)
+
+  /** 로그인 안 한 사람이 신청을 누르면 띄울 안내창. 어느 공모였는지 기억해 둡니다. */
+  const [loginNeededFor, setLoginNeededFor] = useState<Call | null>(null)
 
   /** 데이터에 실제로 있는 연도만 고릅니다 */
   const years = useMemo(
@@ -199,7 +202,12 @@ export function CallSearch({ calls }: { calls: Call[] }) {
           <>
             <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.slice(0, shown).map((call) => (
-                <CallCard key={call.id} call={call} />
+                <CallCard
+                  key={call.id}
+                  call={call}
+                  isLoggedIn={isLoggedIn}
+                  onNeedLogin={() => setLoginNeededFor(call)}
+                />
               ))}
             </div>
 
@@ -216,11 +224,67 @@ export function CallSearch({ calls }: { calls: Call[] }) {
           </>
         )}
       </section>
+
+      {loginNeededFor && (
+        <LoginNeededDialog call={loginNeededFor} onClose={() => setLoginNeededFor(null)} />
+      )}
     </>
   )
 }
 
 // ── 부품 ──────────────────────────────────────────────────────────
+
+/**
+ * 로그인이 필요하다는 안내창
+ *
+ * 목록과 검색은 누구나 볼 수 있지만, 신청은 로그인해야 합니다.
+ * 로그인 후 보던 공모의 신청서로 그대로 돌아오도록 next 를 넘깁니다.
+ */
+function LoginNeededDialog({ call, onClose }: { call: Call; onClose: () => void }) {
+  const next = encodeURIComponent(`/apply/${call.id}`)
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-6"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="bg-surface rounded-[10px] border border-line max-w-[380px] w-full px-7 py-7 text-center"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-needed-title"
+      >
+        <h2 id="login-needed-title" className="text-[17px] font-semibold mb-2">
+          로그인이 필요합니다
+        </h2>
+        <p className="text-[13.5px] text-muted leading-relaxed mb-1">
+          공모사업에 지원하려면 먼저 로그인해 주세요.
+        </p>
+        <p className="text-[13px] text-faint mb-6">
+          로그인하면 <strong className="text-muted font-medium">{call.title}</strong> 신청서로 바로
+          이동합니다.
+        </p>
+
+        <div className="flex flex-col gap-2">
+          <Link
+            href={`/login?next=${next}`}
+            className="bg-accent text-white rounded-[7px] py-2.5 text-sm font-medium hover:bg-accent-dark transition-colors"
+          >
+            로그인하고 지원하기
+          </Link>
+          <button
+            onClick={onClose}
+            className="border border-line rounded-[7px] py-2.5 text-sm hover:border-line2 transition-colors"
+          >
+            목록 계속 보기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -259,34 +323,82 @@ function CheckChip({
   )
 }
 
-function CallCard({ call }: { call: Call }) {
+/**
+ * 공모 카드
+ *
+ * 목록과 내용은 로그인 없이도 볼 수 있습니다.
+ * 지원(신청)만 로그인이 필요하고, 로그인 안 한 상태로 누르면 안내창이 뜹니다.
+ */
+function CallCard({
+  call,
+  isLoggedIn,
+  onNeedLogin,
+}: {
+  call: Call
+  isLoggedIn: boolean
+  onNeedLogin: () => void
+}) {
   const open = call.status === 'open'
 
-  return (
-    <article className="group">
-      <Link href={`/apply/${call.id}`} className="block">
-        {/* 공고 포스터 */}
-        <div className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-line bg-[#f1efe8] mb-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={callImageSrc(call)}
-            alt={`${call.title} 공고 포스터`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
-          <span
-            className={`absolute top-0 left-0 px-3.5 py-1.5 text-[12.5px] font-medium text-white ${
-              open ? 'bg-accent' : 'bg-[#9a9894]'
-            }`}
-          >
-            {open ? '모집중' : '모집마감'}
-          </span>
-        </div>
+  /** 신청 버튼을 눌렀을 때 — 로그인 안 했으면 이동을 막고 안내창을 띄웁니다 */
+  function handleApply(e: React.MouseEvent) {
+    if (!isLoggedIn) {
+      e.preventDefault()
+      onNeedLogin()
+    }
+  }
 
-        <h3 className="text-base font-semibold leading-[1.45] tracking-[-0.3px] text-text mb-2 group-hover:text-accent transition-colors">
-          {call.title}
-        </h3>
-        <p className="text-[13.5px] leading-relaxed text-muted line-clamp-3">{call.description}</p>
+  return (
+    <article className="group flex flex-col">
+      {/* 공고 포스터 */}
+      <Link
+        href={`/apply/${call.id}`}
+        onClick={handleApply}
+        className="block relative aspect-[4/3] overflow-hidden rounded-[10px] border border-line bg-[#f1efe8] mb-4"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={callImageSrc(call)}
+          alt={`${call.title} 공고 포스터`}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+        />
+        <span
+          className={`absolute top-0 left-0 px-3.5 py-1.5 text-[12.5px] font-medium text-white ${
+            open ? 'bg-accent' : 'bg-[#9a9894]'
+          }`}
+        >
+          {open ? '모집중' : '모집마감'}
+        </span>
       </Link>
+
+      <h3 className="text-base font-semibold leading-[1.45] tracking-[-0.3px] text-text mb-2">
+        <Link href={`/apply/${call.id}`} onClick={handleApply} className="hover:text-accent transition-colors">
+          {call.title}
+        </Link>
+      </h3>
+
+      <p className="text-[13.5px] leading-relaxed text-muted line-clamp-3 mb-4 flex-1">
+        {call.description}
+      </p>
+
+      <div className="text-[12.5px] text-faint mb-3">
+        {call.startDate} ~ {call.endDate}
+        {call.budget && <span className="ml-2">· {call.budget}</span>}
+      </div>
+
+      {open ? (
+        <Link
+          href={`/apply/${call.id}`}
+          onClick={handleApply}
+          className="block text-center bg-accent text-white rounded-[7px] py-2.5 text-sm font-medium hover:bg-accent-dark transition-colors"
+        >
+          지원하기
+        </Link>
+      ) : (
+        <span className="block text-center border border-line rounded-[7px] py-2.5 text-sm text-faint">
+          모집이 마감되었습니다
+        </span>
+      )}
     </article>
   )
 }

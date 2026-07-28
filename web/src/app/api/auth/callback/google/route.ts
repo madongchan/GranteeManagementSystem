@@ -38,8 +38,11 @@ export async function GET(request: NextRequest) {
       accountId: matched?.id ?? CURRENT_ACCOUNT_ID,
     })
 
-    const response = NextResponse.redirect(new URL('/my', request.url))
+    // 로그인 전에 보려던 곳으로 돌려보냅니다 (없으면 공모 목록)
+    const next = request.cookies.get('oauth_next')?.value ?? '/'
+    const response = NextResponse.redirect(new URL(next, request.url))
     response.cookies.delete('oauth_state')
+    response.cookies.delete('oauth_next')
     return response
   } catch (error) {
     console.error('구글 로그인 실패:', error)

@@ -18,8 +18,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=demo-disabled', request.url), 303)
   }
 
-  const accountId = (await request.formData()).get('accountId')?.toString() ?? CURRENT_ACCOUNT_ID
+  const form = await request.formData()
+  const accountId = form.get('accountId')?.toString() ?? CURRENT_ACCOUNT_ID
   const account = ACCOUNTS.find((a) => a.id === accountId) ?? ACCOUNTS[0]
+
+  const raw = form.get('next')?.toString() ?? '/'
+  const next = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/'
 
   await setSession({
     sub: 'demo',
@@ -28,5 +32,5 @@ export async function POST(request: NextRequest) {
     accountId: account.id,
   })
 
-  return NextResponse.redirect(new URL('/my', request.url), 303)
+  return NextResponse.redirect(new URL(next, request.url), 303)
 }

@@ -13,7 +13,7 @@ import { participantMessage } from '@/lib/domain/stage'
 
 export default async function MyApplicationsPage() {
   const session = await getSession()
-  if (!session) redirect('/login?error=required')
+  if (!session) redirect('/login?error=required&next=%2Fmy')
 
   const apps = getMyApplications(session.accountId)
 
