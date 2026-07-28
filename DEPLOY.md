@@ -119,6 +119,19 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 **빌드 실패 `Couldn't find any pages or app directory`**
 → Root Directory 가 `web` 으로 되어 있는지 확인하세요.
 
+**두 번째 프로젝트만 배포가 안 되고 도메인이 404 (`NOT_FOUND` / `DEPLOYMENT_NOT_FOUND`)**
+→ 빌드가 **건너뛰기(Skip)** 된 것입니다.
+   같은 저장소·같은 커밋을 첫 번째 프로젝트가 이미 배포했으면
+   Vercel 이 "이미 배포한 커밋"으로 보고 빌드를 생략합니다.
+   1. Settings → Build and Deployment → Root Directory 섹션
+      "Skip deployments when there are no changes to the root directory..." → **Disabled**
+   2. 새 커밋을 하나 밀어 넣어 SHA 를 바꿉니다 (또는 Redeploy 시 빌드 캐시 사용 해제)
+
+**주소는 열리는데 Vercel 로그인 화면으로 튕김**
+→ 오류가 아니라 접근 보호입니다.
+   Settings → Deployment Protection → Vercel Authentication → Require Log In 을 끄면 공개됩니다.
+   ⚠️ 관리자 사이트는 우리 쪽 로그인이 아직 없으므로, 켜 두는 편이 안전합니다.
+
 **구글 로그인에서 `redirect_uri_mismatch`**
 → 구글 콘솔에 등록한 주소와 실제 접속 주소가 정확히 같아야 합니다. `https`, 끝의 `/` 유무까지 확인하세요.
 
