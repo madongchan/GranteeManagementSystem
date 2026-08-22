@@ -11,6 +11,9 @@ import { ALL_CLASSES, effectiveClass } from '@/lib/domain/classify'
 import { isSettlementPoor } from '@/lib/domain/settlement'
 import { STAGES, stageLabel } from '@/lib/domain/stage'
 
+// "오늘" 기준으로 지연 후속관리를 걸러내므로, 정적 캐싱으로 날짜가 고정되면 안 됩니다.
+export const dynamic = 'force-dynamic'
+
 export default function DashboardPage() {
   const apps = getApplications()
   const today = new Date().toISOString().slice(0, 10)

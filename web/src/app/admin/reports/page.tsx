@@ -5,6 +5,9 @@ import { getApplications, getCalls } from '@/lib/mock-data'
 import { ReportView } from '@/components/report-view'
 import { PageTitle } from '@/components/ui'
 
+// 작성일(오늘)을 담으므로, 정적 캐싱으로 날짜가 고정되면 안 됩니다.
+export const dynamic = 'force-dynamic'
+
 export default function AdminReportsPage() {
   return (
     <>
