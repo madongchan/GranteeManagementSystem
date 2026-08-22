@@ -39,7 +39,10 @@ export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 로그인 처리 통로는 양쪽 모두 그대로 통과시킵니다.
-  if (pathname.startsWith('/api/')) {
+  // /api/ 전체가 아니라 /api/auth/ 만 열어둡니다 — 지금은 API가 이거 하나뿐이라
+  // 동작은 같지만, 나중에 /api/admin/... 같은 관리자 전용 API를 추가할 때
+  // 그 안에 관리자 확인을 깜빡해도 이 프록시가 대신 막아주도록 미리 좁혀둡니다.
+  if (pathname.startsWith('/api/auth/')) {
     return NextResponse.next()
   }
 
