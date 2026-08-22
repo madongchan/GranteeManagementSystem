@@ -4,9 +4,17 @@
 같은 저장소를 Vercel에 **두 번** 연결해 참여자용·관리자용 주소를 각각 만듭니다.
 
 ```
-https://hamkke-apply.vercel.app   ← 참여자 (의뢰자가 시연할 화면)
-https://hamkke-admin.vercel.app   ← 관리자 (재단 내부용)
+https://hamkke-apply.vercel.app   ← 참여자 (의뢰자가 시연할 화면) — 예시 주소, 아래 실제 주소 참고
+https://hamkke-admin.vercel.app   ← 관리자 (재단 내부용) — 예시 주소, 아래 실제 주소 참고
 ```
+
+> [!warning] 실제 배포 주소 (2026-08-23 확인)
+> Project Name을 바꿔도 `.vercel.app` 주소가 따라오지 않는 경우가 있습니다(아래 "자주 겪는 문제" 참고). 지금 실제로 살아있는 주소는 다음과 같습니다.
+>
+> | 프로젝트 이름 | 역할 | 실제 주소 |
+> |---|---|---|
+> | `hamkke-apply` | 참여자 | `https://grantee-management-system-two.vercel.app` |
+> | `admin-hamkke` | 관리자 | `https://grantee-management-system.vercel.app` |
 
 > **왜 두 번 올리나요?**
 > 무료 `vercel.app` 주소로는 `admin.○○○.vercel.app` 같은 걸 만들 수 없습니다.
@@ -48,7 +56,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    | `ALLOW_DEMO_LOGIN` | `true` |
 
 5. **Deploy** → 2~3분 뒤 주소가 나옵니다
-6. Settings → General → **Project Name** 을 `hamkke-apply` 등으로 바꾸면 주소도 바뀝니다
+6. Settings → General → **Project Name** 을 `hamkke-apply` 등으로 바꾸면 주소도 바뀐다고 안내했으나, **실제로는 안 바뀔 수 있습니다.** 이미 다른 이름(예: 저장소 이름 기반)으로 도메인이 배정된 상태에서 이름만 바꾸면 옛 도메인이 그대로 남습니다. Settings → **Domains** 에서 원하는 `xxx.vercel.app` 을 직접 추가해야 확실합니다 (아래 "자주 겪는 문제" 참고)
 
 ---
 
@@ -137,3 +145,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 **로그인은 되는데 새로고침하면 풀림**
 → 두 프로젝트의 `AUTH_SECRET` 이 다르거나 비어 있습니다.
+
+**`hamkke-apply.vercel.app` 처럼 원하는 이름으로 들어가면 `404: DEPLOYMENT_NOT_FOUND`**
+→ Project Name을 바꿔도 처음 배정된 `.vercel.app` 주소는 그대로 남습니다(저장소 이름 기반으로 자동 배정된 주소, 예: `grantee-management-system.vercel.app`, 두 번째 프로젝트는 `-two`가 붙음).
+   Settings → **Domains** 에 들어가서 원하는 이름을 **직접 Add** 해야 합니다. 추가하지 않으면 원래 자동 배정된 주소로만 접속됩니다 — Vercel 대시보드의 프로젝트 카드에 실제 주소가 적혀 있으니 먼저 확인하세요.
