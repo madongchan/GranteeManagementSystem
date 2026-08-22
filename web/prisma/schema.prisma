@@ -1,0 +1,129 @@
+// Prisma 스키마
+//
+// web/src/lib/types.ts 의 타입을 그대로 옮긴 것입니다. 필드를 새로 추가하거나
+// 다르게 정규화하지 않았습니다 — 화면·목업 데이터가 이미 쓰고 있는 모양이 기준입니다.
+//
+// 중첩 배열/객체(Kpi[], Activity[], Settlement, Attachment[], Consents, scores 등)는
+// 별도 테이블로 쪼개지 않고 Json 컬럼에 그대로 담았습니다. 이유:
+//   1) 지금 코드 어디에서도 이 중첩 값의 개별 필드로 조회·필터링하지 않습니다
+//      (항상 Application/Account 전체와 함께 한 덩어리로 읽고 씁니다).
+//   2) Json은 sqlite/postgresql 양쪽에서 동일하게 동작해서, Docker 없이도
+//      로컬에서는 sqlite로 검증하고 provider만 바꿔 postgresql로 넘어갈 수 있습니다.
+//      (Postgres 전용 String[] 배열 타입을 썼다면 이 전환이 안 됩니다.)
+//
+// Application.applicant 는 특히 주의: 신청 당시 회원 정보를 "얼려둔 사본"입니다.
+// Account 관계로 만들면 참여자가 나중에 프로필을 고칠 때 과거 신청서까지 바뀌어버려
+// mock-data.ts의 설계 의도(신청서는 제출 당시 그대로 유지)를 깨뜨립니다. 그래서 Json.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// Prisma 7부터 datasource 블록에는 provider만 남습니다.
+// 실제 연결 문자열은 prisma.config.ts(CLI용) / src/lib/prisma.ts(앱 런타임용)에서 읽습니다.
+datasource db {
+  provider = "postgresql"
+}
+
+/// 회원 (로그인한 사람) — web/src/lib/types.ts 의 Account
+model Account {
+  id          String  @id
+  kind        String // 'individual' | 'org' | 'company' — taxonomy.ts 참고
+  name        String
+  type        String
+  sector      String // Sector | '' — 빈 문자열 허용
+  email       String
+  contact     String
+  birthDate   String // 'YYYY-MM-DD'. 화면에서 문자열로만 다루므로 그대로 String.
+  rep         String?
+  affiliation String?
+  sido        String?
+  sigungu     String?
+  ageBand     String?
+  scaleBand   String?
+  consents    Json // Consents (collect/thirdParty/research/followup/survey/agreedAt)
+  createdAt   String
+
+  applications Application[]
+
+  @@index([email])
+}
+
+/// 공모사업 — web/src/lib/types.ts 의 Call
+model Call {
+  id          String  @id
+  title       String
+  description String
+  targets     Json // Kind[]
+  sectors     Json // Sector[]
+  startDate   String
+  endDate     String
+  budget      String
+  capacity    String
+  status      String // 'open' | 'closed'
+  image       String? // data URL(base64)일 수 있어 길이 제한 없는 텍스트로 둡니다.
+
+  applications Application[]
+}
+
+/// 신청서 — web/src/lib/types.ts 의 Application. 이 시스템의 중심 데이터입니다.
+model Application {
+  id        String @id
+  displayNo String @unique
+  accountId String
+  callId    String
+
+  /// 신청 당시 회원 정보 스냅샷 (Omit<Account, 'id'>). 이후 프로필이 바뀌어도 유지됩니다.
+  applicant Json
+
+  stage     String // Stage
+  status    String // Status
+  createdAt String
+
+  // 신청
+  motive          String
+  requestedBudget Int?
+
+  // 심사
+  docScore       Int?
+  interviewScore Int?
+  reviewResult   String @default("")
+  reviewOpinion  String @default("")
+
+  // 사업진행
+  mentoring   String @default("")
+  execRate    Int?
+  inspection  String @default("")
+  issue       String @default("")
+
+  // 종료
+  reportStatus       String @default("none")
+  reportRejectReason String @default("")
+  reportSummary      String @default("")
+  performance        String @default("")
+
+  /// 5축 진단 { accounting, execution, outcome, sustainability, linkage } (0~3)
+  scores Json
+
+  /// 관리자가 손으로 지정한 분류. 있으면 자동 판정보다 우선.
+  classificationManual String?
+
+  // 사후관리
+  followupSupport String @default("")
+  followupLinkage String @default("")
+  nextContact     String @default("")
+  manager         String @default("")
+
+  kpis        Json // Kpi[]
+  activities  Json // Activity[]
+  settlement  Json // Settlement { status, items[], evalSchedule, evalFaithfulness, evalCommunication, note }
+  attachments Json // Attachment[]
+  resultFiles Json // Attachment[]
+
+  account Account @relation(fields: [accountId], references: [id])
+  call    Call    @relation(fields: [callId], references: [id])
+
+  @@index([accountId])
+  @@index([callId])
+}

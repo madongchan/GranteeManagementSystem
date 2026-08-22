@@ -40,3 +40,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma
+/src/generated/prisma
+*.db
+*.db-journal
+
+# prisma init이 자동으로 받아온 AI 에이전트용 스킬 문서 (이 레포 소유 아님)
+/.claude
+/.windsurf
+/.agents
+/skills-lock.json
