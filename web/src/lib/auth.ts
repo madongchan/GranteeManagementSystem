@@ -57,6 +57,21 @@ export function isDemoLoginAllowed(): boolean {
   return process.env.ALLOW_DEMO_LOGIN === 'true'
 }
 
+/**
+ * 이 이메일이 관리자 화면에 들어올 수 있는지.
+ *
+ * ADMIN_EMAILS 환경변수(콤마 구분)에 등록된 이메일만 허용합니다.
+ * 값이 비어 있으면 아무도 못 들어갑니다 — "설정 전엔 전체 공개"가 아니라
+ * "설정 전엔 전체 차단"이 안전한 기본값입니다.
+ */
+export function isAdminEmail(email: string): boolean {
+  const list = (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+  return list.includes(email.toLowerCase())
+}
+
 /** 쿠키 서명에 쓸 비밀키 */
 function secret(): string {
   return process.env.AUTH_SECRET || 'dev-only-insecure-secret-change-me'
