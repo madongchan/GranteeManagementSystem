@@ -1,0 +1,45 @@
+/*
+  그래프 뷰 색감
+  프로젝트 색 토큰(재구축 중인 시스템의 팔레트)에 맞춰 조정했습니다.
+  설정 > 모양 > CSS 스니펫 에서 켜고 끌 수 있습니다.
+*/
+
+.theme-light {
+  /* 노트 노드 기본색 — 색 그룹이 지정되지 않은 노드 */
+  --graph-node: #73726c;
+  /* 태그 노드 */
+  --graph-node-tag: #854f0b;
+  /* 아직 만들지 않은 노트(빈 링크) */
+  --graph-node-unresolved: #c9c7bf;
+  /* 첨부파일 */
+  --graph-node-attachment: #9c9a92;
+  /* 선택/포커스된 노드 */
+  --graph-node-focused: #1d7a5f;
+  /* 연결선 */
+  --graph-line: #d8d6ce;
+}
+
+.theme-dark {
+  --graph-node: #b9b7ae;
+  --graph-node-tag: #d9a55c;
+  --graph-node-unresolved: #55534d;
+  --graph-node-attachment: #7d7b74;
+  --graph-node-focused: #4fc79f;
+  --graph-line: #3d3c38;
+}
+
+/* 그래프 배경을 본문 배경과 살짝 다르게 해 깊이감을 줍니다 */
+.theme-light .workspace-leaf-content[data-type="graph"] .view-content,
+.theme-light .workspace-leaf-content[data-type="localgraph"] .view-content {
+  background-color: #f2f0eb;
+}
+
+.theme-dark .workspace-leaf-content[data-type="graph"] .view-content,
+.theme-dark .workspace-leaf-content[data-type="localgraph"] .view-content {
+  background-color: #1a1a18;
+}
+
+/* 노드 이름을 조금 더 또렷하게 */
+.graph-view.color-text {
+  font-weight: 500;
+}

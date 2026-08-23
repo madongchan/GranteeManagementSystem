@@ -1,0 +1,216 @@
+<svg viewBox="0 0 1160 1560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="함께일하는재단 통합관리시스템 구조 및 현황 스냅샷, 2026년 8월 22일 기준. 하나의 저장소가 참여자용과 관리자용 두 배포로 나뉘고, 로그인은 참여자에만 있으며, 마지막 커밋 이후 24일간 후속 작업이 없다.">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2c2c2a"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e08c0c"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d7a5f"/>
+    </marker>
+  </defs>
+
+  <!-- page -->
+  <rect x="0" y="0" width="1160" height="1560" fill="#fbfaf7"/>
+
+  <!-- ===== header ===== -->
+  <text x="40" y="34" font-family="'JetBrains Mono','Consolas',monospace" font-size="12" letter-spacing="2" fill="#767676">PROJECT SNAPSHOT</text>
+  <text x="40" y="68" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="30" font-weight="700" fill="#2c2c2a">함께일하는재단 통합관리시스템</text>
+
+  <rect x="874" y="24" width="246" height="34" rx="17" fill="#faeeda"/>
+  <text x="997" y="46" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="13" font-weight="700" fill="#854f0b">구현 중 · DB 연결 전</text>
+  <text x="1120" y="74" text-anchor="end" font-family="'JetBrains Mono','Consolas',monospace" font-size="11" fill="#767676">최근 커밋 2026-07-29 · 배포 확인 2026-08-23</text>
+
+  <line x1="40" y1="96" x2="1120" y2="96" stroke="#e4e2da" stroke-width="1.5"/>
+
+  <!-- ===== Panel 1: architecture ===== -->
+  <text x="40" y="132" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="20" font-weight="700" fill="#2c2c2a">① 구조 — 저장소 하나, 배포 둘</text>
+  <text x="40" y="154" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="13" fill="#767676">proxy.ts 미들웨어가 host 앞부분(admin.) 또는 SITE_MODE 환경변수로 참여자·관리자를 가른다</text>
+
+  <rect x="430" y="172" width="300" height="46" rx="8" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <text x="580" y="192" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="13" font-weight="700" fill="#2c2c2a">GranteeManagementSystem/web</text>
+  <text x="580" y="209" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="10.5" fill="#767676">Next.js 16 · React 19 · Tailwind 4</text>
+
+  <line x1="580" y1="218" x2="580" y2="248" stroke="#2c2c2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="380" y="250" width="400" height="52" rx="8" fill="#ffffff" stroke="#2c2c2a" stroke-width="1.5"/>
+  <text x="580" y="272" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="13" font-weight="700" fill="#2c2c2a">proxy.ts — 미들웨어</text>
+  <text x="580" y="290" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="10.5" fill="#767676">/api/* 는 두 사이트 모두 그대로 통과시킨다</text>
+
+  <line x1="460" y1="302" x2="320" y2="332" stroke="#e08c0c" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+  <line x1="700" y1="302" x2="840" y2="332" stroke="#1d7a5f" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <!-- participant card -->
+  <rect x="60" y="336" width="500" height="300" rx="12" fill="#fdf3e3" stroke="#f5a11e" stroke-width="1.5"/>
+  <circle cx="92" cy="368" r="6" fill="#e08c0c"/>
+  <text x="108" y="373" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" font-weight="700" fill="#e08c0c">참여자 · hamkke-apply → grantee-management-system-two.vercel.app</text>
+
+  <text x="90" y="410" font-family="'JetBrains Mono','Consolas',monospace" font-size="12.5" fill="#2c2c2a">/</text>
+  <text x="150" y="410" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" fill="#2c2c2a">공모 목록 — 검색·필터</text>
+
+  <text x="90" y="440" font-family="'JetBrains Mono','Consolas',monospace" font-size="12.5" fill="#2c2c2a">/apply/[callId]</text>
+  <text x="290" y="440" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" fill="#2c2c2a">신청서</text>
+
+  <text x="90" y="470" font-family="'JetBrains Mono','Consolas',monospace" font-size="12.5" fill="#2c2c2a">/my, /my/[id]</text>
+  <text x="270" y="470" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" fill="#2c2c2a">내 신청 내역 — 진행률·정산</text>
+
+  <text x="90" y="500" font-family="'JetBrains Mono','Consolas',monospace" font-size="12.5" font-weight="700" fill="#e08c0c">/login</text>
+  <text x="170" y="500" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" fill="#2c2c2a">로그인 — 구글 · 체험 로그인 ✨</text>
+
+  <line x1="90" y1="522" x2="530" y2="522" stroke="#f5a11e" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="90" y="548" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#767676">디자인: 재단 실제 사이트(hamkke.org) 팔레트 적용</text>
+  <text x="90" y="608" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" font-weight="700" fill="#993c1d">⛔ /admin 접근 시 404 — 주소 완전 분리</text>
+
+  <!-- admin card -->
+  <rect x="600" y="336" width="500" height="300" rx="12" fill="#e1f5ee" stroke="#1d7a5f" stroke-width="1.5"/>
+  <circle cx="632" cy="368" r="6" fill="#1d7a5f"/>
+  <text x="648" y="373" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" font-weight="700" fill="#145c47">관리자 · admin-hamkke → grantee-management-system.vercel.app</text>
+
+  <text x="630" y="400" font-family="'JetBrains Mono','Consolas',monospace" font-size="12" fill="#2c2c2a">/</text>
+  <text x="670" y="400" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#2c2c2a">대시보드 — 검토대기·정산부실·반려</text>
+
+  <text x="630" y="426" font-family="'JetBrains Mono','Consolas',monospace" font-size="12" fill="#2c2c2a">/applications</text>
+  <text x="800" y="426" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#2c2c2a">신청 관리 — 5종 필터</text>
+
+  <text x="630" y="452" font-family="'JetBrains Mono','Consolas',monospace" font-size="12" fill="#2c2c2a">/applications/[id]</text>
+  <text x="860" y="452" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#2c2c2a">상세 — 5단계 탭</text>
+
+  <text x="630" y="478" font-family="'JetBrains Mono','Consolas',monospace" font-size="12" fill="#2c2c2a">/members, /members/[id]</text>
+  <text x="960" y="478" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#2c2c2a">참여자 정보</text>
+
+  <text x="630" y="504" font-family="'JetBrains Mono','Consolas',monospace" font-size="12" font-weight="700" fill="#145c47">/calls</text>
+  <text x="690" y="504" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#2c2c2a">공모 관리 — 등록 기능 ✨NEW</text>
+
+  <text x="630" y="530" font-family="'JetBrains Mono','Consolas',monospace" font-size="12" fill="#2c2c2a">/reports</text>
+  <text x="710" y="530" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#2c2c2a">보고서 — 5장·인쇄(PDF)·CSV 28열</text>
+
+  <line x1="630" y1="552" x2="1070" y2="552" stroke="#1d7a5f" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="630" y="608" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" font-weight="700" fill="#993c1d">⚠ 로그인 없음 — 주소만 알면 진입 가능 (보안 아님)</text>
+
+  <line x1="40" y1="660" x2="1120" y2="660" stroke="#e4e2da" stroke-width="1.5"/>
+
+  <!-- ===== Panel 2: auth + data flow ===== -->
+  <text x="40" y="696" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="20" font-weight="700" fill="#2c2c2a">② 로그인 · 데이터 흐름</text>
+  <text x="40" y="718" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="13" fill="#767676">로그인은 참여자 쪽에만 있다 · 저장은 아직 메모리뿐이라 새로고침하면 초기화된다</text>
+
+  <rect x="60" y="748" width="150" height="56" rx="8" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <text x="135" y="781" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="13" fill="#2c2c2a">브라우저</text>
+
+  <rect x="260" y="748" width="190" height="56" rx="8" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <text x="355" y="781" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="11.5" fill="#2c2c2a">/api/auth/google</text>
+
+  <rect x="500" y="748" width="180" height="56" rx="8" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <text x="590" y="781" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" fill="#2c2c2a">Google 동의 화면</text>
+
+  <rect x="730" y="748" width="230" height="56" rx="8" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <text x="845" y="775" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="10.5" fill="#2c2c2a">/api/auth/callback/google</text>
+  <text x="845" y="792" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="10.5" fill="#767676">코드 → 사용자 정보 교환</text>
+
+  <rect x="1010" y="748" width="110" height="56" rx="8" fill="#fdf3e3" stroke="#f5a11e" stroke-width="1.5"/>
+  <text x="1065" y="775" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" font-weight="700" fill="#e08c0c">서명 쿠키</text>
+  <text x="1065" y="792" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="10" fill="#767676">세션 7일</text>
+
+  <line x1="210" y1="776" x2="256" y2="776" stroke="#2c2c2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="450" y1="776" x2="496" y2="776" stroke="#2c2c2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="680" y1="776" x2="726" y2="776" stroke="#2c2c2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="960" y1="776" x2="1006" y2="776" stroke="#2c2c2a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <path d="M135,804 C135,860 1000,860 1065,808" fill="none" stroke="#767676" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="600" y="882" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#767676">체험 로그인 · <tspan font-family="'JetBrains Mono','Consolas',monospace">/api/auth/demo</tspan> — 구글 키 없으면 자동 허용, 있으면 ALLOW_DEMO_LOGIN=true 필요</text>
+
+  <rect x="60" y="908" width="1040" height="46" rx="8" fill="#faece7" stroke="#993c1d" stroke-width="1.2"/>
+  <text x="580" y="936" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="13" font-weight="700" fill="#993c1d">⚠ 관리자 쪽엔 로그인·권한 검증이 아예 없다 — DB 연결 시 반드시 함께 추가</text>
+
+  <text x="580" y="985" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12.5" fill="#2c2c2a">
+    <tspan font-family="'JetBrains Mono','Consolas',monospace" fill="#767676">mock-data.ts</tspan>(메모리) → <tspan font-family="'JetBrains Mono','Consolas',monospace" fill="#767676">domain/*.ts</tspan>(분류·단계·정산·KPI·보고서) → 화면
+  </text>
+  <text x="580" y="1006" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#767676">DB는 Supabase 마이그레이션만 작성된 채 보류 — Firebase는 카카오 로그인 미지원이 걸림돌</text>
+
+  <line x1="40" y1="1030" x2="1120" y2="1030" stroke="#e4e2da" stroke-width="1.5"/>
+
+  <!-- ===== Panel 3: timeline ===== -->
+  <text x="40" y="1066" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="20" font-weight="700" fill="#2c2c2a">③ 타임라인 — 커밋 7개, 그리고 24일의 공백</text>
+  <text x="40" y="1088" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="13" fill="#767676">2026-07-27~29 사흘간 몰아 작업 후, 오늘까지 새 커밋이 없다</text>
+
+  <line x1="60" y1="1150" x2="360" y2="1150" stroke="#2c2c2a" stroke-width="2"/>
+  <line x1="368" y1="1144" x2="378" y2="1156" stroke="#767676" stroke-width="2"/>
+  <line x1="380" y1="1144" x2="390" y2="1156" stroke="#767676" stroke-width="2"/>
+  <line x1="400" y1="1150" x2="1000" y2="1150" stroke="#e4e2da" stroke-width="2" stroke-dasharray="2,6"/>
+  <line x1="1000" y1="1150" x2="1100" y2="1150" stroke="#854f0b" stroke-width="2"/>
+
+  <circle cx="70" cy="1150" r="4.5" fill="#2c2c2a"/>
+  <line x1="70" y1="1150" x2="70" y2="1120" stroke="#e4e2da" stroke-width="1"/>
+  <text x="70" y="1112" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="9.5" fill="#767676">07-27</text>
+  <text x="70" y="1172" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="9.5" fill="#2c2c2a">초기 커밋</text>
+
+  <circle cx="140" cy="1150" r="4.5" fill="#2c2c2a"/>
+  <line x1="140" y1="1150" x2="140" y2="1178" stroke="#e4e2da" stroke-width="1"/>
+  <text x="140" y="1112" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="9.5" fill="#767676">07-28</text>
+  <text x="140" y="1194" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="9.5" fill="#2c2c2a">참고자료·에이전트 설정</text>
+
+  <circle cx="210" cy="1150" r="4.5" fill="#2c2c2a"/>
+  <line x1="210" y1="1150" x2="210" y2="1120" stroke="#e4e2da" stroke-width="1"/>
+  <text x="210" y="1112" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="9.5" fill="#767676">07-28</text>
+  <text x="210" y="1104" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="9.5" fill="#2c2c2a">관리자·참여자 데모 화면</text>
+
+  <circle cx="280" cy="1150" r="4.5" fill="#2c2c2a"/>
+  <line x1="280" y1="1150" x2="280" y2="1178" stroke="#e4e2da" stroke-width="1"/>
+  <text x="280" y="1194" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="9.5" fill="#2c2c2a">복지분류·정보관리·보고서</text>
+  <text x="280" y="1206" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="9.5" fill="#767676">07-29</text>
+
+  <circle cx="340" cy="1150" r="5" fill="#1d7a5f"/>
+  <line x1="340" y1="1150" x2="340" y2="1120" stroke="#e4e2da" stroke-width="1"/>
+  <text x="340" y="1112" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="9.5" fill="#767676">07-29</text>
+  <text x="340" y="1104" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="9.5" font-weight="700" fill="#145c47">구글 로그인 + 배포 준비</text>
+
+  <text x="580" y="1150" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="12" fill="#a39d8f" dy="-14">— 24일간 커밋 없음 —</text>
+
+  <circle cx="1040" cy="1150" r="6" fill="#854f0b"/>
+  <line x1="1040" y1="1150" x2="1040" y2="1120" stroke="#e4e2da" stroke-width="1"/>
+  <text x="1040" y="1108" text-anchor="middle" font-family="'JetBrains Mono','Consolas',monospace" font-size="11" font-weight="700" fill="#854f0b">2026-08-23 (오늘)</text>
+  <text x="1040" y="1178" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="10.5" font-weight="700" fill="#854f0b">시연 전 — 개발 재개 예정</text>
+  <text x="1040" y="1192" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="10.5" font-weight="700" fill="#0f6e56">배포는 정상 확인 ✅</text>
+
+  <text x="580" y="1222" text-anchor="middle" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="10.5" fill="#a39d8f">(축은 실제 날짜가 아니라 사건 순서를 보여주기 위해 압축·과장했다)</text>
+
+  <line x1="40" y1="1248" x2="1120" y2="1248" stroke="#e4e2da" stroke-width="1.5"/>
+
+  <!-- ===== Panel 4: status grid ===== -->
+  <text x="40" y="1284" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="20" font-weight="700" fill="#2c2c2a">④ 지금 상태</text>
+
+  <!-- card A 완료 -->
+  <rect x="40" y="1306" width="255" height="196" rx="10" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <rect x="40" y="1306" width="6" height="196" rx="3" fill="#0f6e56"/>
+  <text x="66" y="1334" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="14" font-weight="700" fill="#0f6e56">✅ 완료</text>
+  <text x="66" y="1362" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 참여자 4종 · 관리자 6종 화면</text>
+  <text x="66" y="1384" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 구글·체험 로그인</text>
+  <text x="66" y="1406" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 복지분류 5축→4분류</text>
+  <text x="66" y="1428" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— Vercel 배포 · 실주소 접속 확인(08-23)</text>
+
+  <!-- card B 보류 -->
+  <rect x="308" y="1306" width="255" height="196" rx="10" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <rect x="308" y="1306" width="6" height="196" rx="3" fill="#854f0b"/>
+  <text x="334" y="1334" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="14" font-weight="700" fill="#854f0b">⏸ 보류</text>
+  <text x="334" y="1362" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— DB: Supabase ↔ Firebase</text>
+  <text x="334" y="1384" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 도메인 미구매</text>
+  <text x="334" y="1406" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 카카오 로그인 전환서류</text>
+
+  <!-- card C 미착수 -->
+  <rect x="576" y="1306" width="255" height="196" rx="10" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <rect x="576" y="1306" width="6" height="196" rx="3" fill="#5f5e5a"/>
+  <text x="602" y="1334" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="14" font-weight="700" fill="#5f5e5a">⬜ 미착수</text>
+  <text x="602" y="1362" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 관리자 권한 검증</text>
+  <text x="602" y="1384" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 실서비스 전환 체크리스트 4건</text>
+  <text x="602" y="1406" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 선정·정산 알림 이메일</text>
+
+  <!-- card D 확인필요 -->
+  <rect x="844" y="1306" width="255" height="196" rx="10" fill="#ffffff" stroke="#e4e2da" stroke-width="1.5"/>
+  <rect x="844" y="1306" width="6" height="196" rx="3" fill="#993c1d"/>
+  <text x="870" y="1334" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="14" font-weight="700" fill="#993c1d">❓ 확인 필요</text>
+  <text x="870" y="1362" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 복지분류 용어 재단 실무 대조</text>
+  <text x="870" y="1384" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— 재단 로고 파일</text>
+  <text x="870" y="1406" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" font-size="11.5" fill="#2c2c2a">— vercel.app 커스텀 도메인 등록 여부</text>
+
+  <text x="40" y="1540" font-family="'JetBrains Mono','Consolas',monospace" font-size="10.5" fill="#a39d8f">출처: git log · web/src 구조 · DEPLOY.md — Claude가 생성한 다이어그램</text>
+</svg>
