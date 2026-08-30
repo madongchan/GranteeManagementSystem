@@ -6,12 +6,12 @@
  * 안 한 사람에게는 안내창을 띄웁니다.
  */
 import { getSession } from '@/lib/auth'
-import { getCalls } from '@/lib/mock-data'
+import { getCalls } from '@/lib/data'
 import { CallSearch } from '@/components/call-search'
 
 export default async function BusinessPage() {
-  const session = await getSession()
+  const [session, calls] = await Promise.all([getSession(), getCalls()])
 
   // 재단 사이트처럼 마감된 공고도 함께 보여주고 목록에서 상태로 구분합니다.
-  return <CallSearch calls={getCalls()} isLoggedIn={Boolean(session)} />
+  return <CallSearch calls={calls} isLoggedIn={Boolean(session)} />
 }

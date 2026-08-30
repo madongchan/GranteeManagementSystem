@@ -5,7 +5,7 @@
  * 단순 집계보다 경고(검토 대기·지연·정산 부실)를 위에 둡니다.
  */
 import Link from 'next/link'
-import { getApplications, getCall } from '@/lib/mock-data'
+import { getApplications, getCalls } from '@/lib/data'
 import { ClassBadge, Empty, Metric, PageTitle, Panel } from '@/components/ui'
 import { ALL_CLASSES, effectiveClass } from '@/lib/domain/classify'
 import { isSettlementPoor } from '@/lib/domain/settlement'
@@ -14,8 +14,8 @@ import { STAGES, stageLabel } from '@/lib/domain/stage'
 // "오늘" 기준으로 지연 후속관리를 걸러내므로, 정적 캐싱으로 날짜가 고정되면 안 됩니다.
 export const dynamic = 'force-dynamic'
 
-export default function DashboardPage() {
-  const apps = getApplications()
+export default async function DashboardPage() {
+  const [apps, calls] = await Promise.all([getApplications(), getCalls()])
   const today = new Date().toISOString().slice(0, 10)
 
   // 참여자 포털로 막 들어온 건 — 아직 아무도 안 본 신청
@@ -163,7 +163,7 @@ export default function DashboardPage() {
       <Panel title="공모사업별 신청">
         <ul className="divide-y divide-line -my-1">
           {[...new Set(apps.map((a) => a.callId))].map((callId) => {
-            const call = getCall(callId)
+            const call = calls.find((c) => c.id === callId)
             const count = apps.filter((a) => a.callId === callId).length
             return (
               <li key={callId} className="flex items-center gap-2 py-2.5 text-[13.5px]">

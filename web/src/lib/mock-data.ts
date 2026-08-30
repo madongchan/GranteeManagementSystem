@@ -1,8 +1,9 @@
 /**
- * 가짜 데이터
+ * 시드(초기) 데이터
  *
- * 나중에 DB를 붙이면 이 파일만 통째로 갈아끼우면 됩니다.
- * 화면 코드는 아래 조회 함수만 부르므로 손댈 필요가 없습니다.
+ * DB를 붙인 뒤로 이 파일은 "화면이 읽는 곳"이 아니라 "DB에 처음 채워 넣을 예시"입니다.
+ * 실제 조회는 web/src/lib/data.ts 가 Prisma 로 합니다.
+ * 여기 배열들은 web/prisma/seed.ts 가 그대로 DB 에 넣습니다 (`npx prisma db seed`).
  *
  * 시연에서 기능이 살아 보이도록 일부러 다양하게 섞었습니다.
  * (분야별·주체별로 골고루, 정산 부실 건, 반려 건, 신규 접수 건 등)
@@ -644,50 +645,4 @@ export const APPLICATIONS: Application[] = [
   },
 ]
 
-// ---------------------------------------------------------------------
-// 조회 함수 — 화면에서는 이것만 부릅니다.
-// DB로 바꿀 때 이 함수들의 속만 갈아끼우면 됩니다.
-// ---------------------------------------------------------------------
-
-export function getCalls() {
-  return CALLS
-}
-
-export function getOpenCalls() {
-  return CALLS.filter((c) => c.status === 'open')
-}
-
-export function getCall(id: string) {
-  return CALLS.find((c) => c.id === id)
-}
-
-export function getApplications() {
-  return APPLICATIONS
-}
-
-export function getApplication(id: string) {
-  return APPLICATIONS.find((a) => a.id === id)
-}
-
-/** 특정 회원이 낸 신청서만 */
-export function getMyApplications(accountId: string) {
-  return APPLICATIONS.filter((a) => a.accountId === accountId)
-}
-
-export function getAccounts() {
-  return ACCOUNTS
-}
-
-export function getAccount(id: string) {
-  return ACCOUNTS.find((a) => a.id === id)
-}
-
-/** 이 회원이 신청한 공모 목록 (회원 관리 화면의 '사업별' 필터에 씁니다) */
-export function getCallIdsOf(accountId: string): string[] {
-  return [...new Set(APPLICATIONS.filter((a) => a.accountId === accountId).map((a) => a.callId))]
-}
-
-/** 담당 매니저 목록 */
-export function getManagers(): string[] {
-  return [...new Set(APPLICATIONS.map((a) => a.manager).filter(Boolean))]
-}
+// 조회 함수는 web/src/lib/data.ts (Prisma) 로 옮겼습니다. 이 파일은 데이터만 둡니다.

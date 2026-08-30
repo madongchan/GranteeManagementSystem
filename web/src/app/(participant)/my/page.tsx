@@ -7,7 +7,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
-import { getCall, getMyApplications } from '@/lib/mock-data'
+import { getCalls, getMyApplications } from '@/lib/data'
 import { Empty, PageTitle, Panel, StatusBadge } from '@/components/ui'
 import { participantMessage } from '@/lib/domain/stage'
 
@@ -15,7 +15,10 @@ export default async function MyApplicationsPage() {
   const session = await getSession()
   if (!session) redirect('/login?error=required&next=%2Fmy')
 
-  const apps = getMyApplications(session.accountId)
+  const [apps, calls] = await Promise.all([
+    getMyApplications(session.accountId),
+    getCalls(),
+  ])
 
   return (
     <div className="max-w-[900px] mx-auto px-6 py-14">
@@ -36,7 +39,7 @@ export default async function MyApplicationsPage() {
       ) : (
         <div className="space-y-3.5">
           {apps.map((app) => {
-            const call = getCall(app.callId)
+            const call = calls.find((c) => c.id === app.callId)
             return (
               <Link key={app.id} href={`/my/${app.id}`} className="block">
                 <Panel className="mb-0 hover:border-line2 transition-colors">

@@ -2,10 +2,21 @@
 -- 함께일하는재단 통합관리시스템 — 초기 스키마
 -- 0001_init.sql
 --
--- 이 파일은 "DB 구조 설계도"입니다. Supabase에 이걸 실행하면
--- 테이블·권한·자동화가 한 번에 만들어집니다.
+-- 이 파일은 "DB 구조 설계도"입니다. Neon(순수 Postgres)에 이걸 실행하면
+-- 테이블·자동화가 한 번에 만들어집니다.
 -- 유니티로 치면 세이브 데이터 구조 정의 + 마이그레이션 코드에 해당하며,
 -- 구조를 바꿀 때마다 0002_, 0003_ 파일을 새로 추가하고 이 파일은 수정하지 않습니다.
+--
+-- [2026-08-23] Supabase → Neon으로 플랫폼을 바꾸면서 이 파일을 고쳤습니다.
+-- Neon은 순수 Postgres라 Supabase가 끼워주던 두 가지가 없습니다.
+--   1. auth.users / auth.uid() — 로그인 사용자 테이블·현재 로그인 id 함수.
+--      이 앱은 어차피 Supabase Auth를 안 쓰고 web/src/lib/auth.ts에서
+--      직접 세션 쿠키를 관리하므로, 원래도 안 맞물리던 부분입니다.
+--   2. storage.* — 파일 저장 서비스. 아직 앱 코드가 파일 업로드를
+--      구현하지 않았으므로 지금은 없어도 됩니다.
+-- 그래서 RLS(행 단위 권한) 정책과 Storage 버킷 설정을 걷어냈습니다.
+-- 권한 검사는 Next.js 라우트 코드에서 세션을 보고 직접 합니다
+-- (관리자 화면은 아직 로그인 자체가 없어 이 부분은 별도 과제로 남아있음).
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -51,23 +62,6 @@ begin
 end;
 $$;
 
--- 관리자 판정.
--- security definer = 이 함수 안에서는 RLS를 무시하고 조회한다는 뜻.
--- 이렇게 하지 않으면 "profiles를 읽으려면 관리자인지 확인해야 하고,
--- 관리자인지 확인하려면 profiles를 읽어야 하는" 무한 재귀에 빠진다.
-create or replace function is_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from profiles
-    where id = auth.uid() and role = 'admin'
-  );
-$$;
-
 -- 5축 진단 → 4분류 자동 판정 (프로토타입 computeClass 이관)
 --   안정성 = 회계 + 자립          (0~6, 임계 5 이상)
 --   잠재력 = 수행 + 성과 + 연계   (0~9, 임계 7 이상)
@@ -100,12 +94,11 @@ $$;
 
 -- ---------------------------------------------------------------------
 -- 3. profiles — 회원 프로필
---    Supabase Auth(auth.users)와 1:1. 비밀번호는 여기 저장하지 않는다.
---    참여자는 구글/카카오로, 관리자는 이메일+비밀번호로 로그인하지만
---    계정 저장소는 auth.users 하나로 공유된다.
+--    Neon엔 auth.users가 없으므로 독립된 기본키를 쓴다.
+--    구글 로그인의 sub 값이나 체험 계정 id를 앱 코드에서 그대로 넣으면 된다.
 -- ---------------------------------------------------------------------
 create table profiles (
-  id           uuid primary key references auth.users(id) on delete cascade,
+  id           uuid primary key default gen_random_uuid(),
   role         user_role   not null default 'participant',
   kind         profile_kind not null default 'org',
   email        text,
@@ -129,25 +122,6 @@ create index on profiles (role);
 create trigger trg_profiles_updated before update on profiles
   for each row execute function set_updated_at();
 
--- 소셜 로그인으로 새 계정이 생기면 프로필 행을 자동 생성한다.
--- 여기서 role은 항상 participant. 관리자 승격은 대시보드에서 수동으로만 한다.
-create or replace function handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  insert into public.profiles (id, email, name)
-  values (
-    new.id,
-    new.email,
-    coalesce(new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'full_name', '')
-  )
-  on conflict (id) do nothing;
-  return new;
-end;
-$$;
-create trigger trg_auth_user_created
-  after insert on auth.users
-  for each row execute function handle_new_user();
-
 
 -- ---------------------------------------------------------------------
 -- 4. calls — 공모사업
@@ -162,7 +136,7 @@ create table calls (
   budget      text,                                -- "최대 1,200만원" 같은 표기용 자유 문자열
   capacity    text,
   status      call_status not null default 'open',
-  image_path  text,                                -- Storage 경로
+  image_path  text,                                -- 대표 이미지 경로(파일 저장소 붙이면 사용)
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
@@ -321,7 +295,9 @@ create index on settlement_items (settlement_id);
 
 
 -- ---------------------------------------------------------------------
--- 8. files — 첨부 메타데이터 (실제 파일은 Storage)
+-- 8. files — 첨부 메타데이터
+--    실제 파일을 어디 둘지(Vercel Blob 등)는 업로드 기능을 만들 때 정한다.
+--    이 표는 "어떤 파일이 어느 신청서/공모에 딸려있나"만 기록한다.
 -- ---------------------------------------------------------------------
 create table files (
   id               uuid primary key default gen_random_uuid(),
@@ -342,7 +318,6 @@ create index on files (call_id);
 -- ---------------------------------------------------------------------
 -- 9. audit_logs — 변경 이력
 --    누가 언제 단계·심사결과·점수·분류를 바꿨는지 추적한다.
---    참여자는 조회할 수 없다.
 -- ---------------------------------------------------------------------
 create table audit_logs (
   id          bigserial primary key,
@@ -356,8 +331,12 @@ create table audit_logs (
 );
 create index on audit_logs (record_id, created_at desc);
 
+-- ponytail: actor_id는 지금 항상 null로 남는다. Supabase에서는 auth.uid()로
+-- "지금 로그인한 사람"을 DB가 알아서 채워줬지만, Neon은 그런 개념이 없다.
+-- 관리자 로그인이 생기면 앱 코드에서 `set_config('app.actor_id', ...)`로
+-- 세션 변수를 넘기고 아래 트리거가 그 값을 읽게 바꾼다.
 create or replace function audit_application_changes()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql as $$
 declare
   f text;
   watched text[] := array[
@@ -373,7 +352,7 @@ begin
   foreach f in array watched loop
     if (o ->> f) is distinct from (n ->> f) then
       insert into audit_logs (actor_id, table_name, record_id, field, old_value, new_value)
-      values (auth.uid(), 'applications', new.id, f, o ->> f, n ->> f);
+      values (null, 'applications', new.id, f, o ->> f, n ->> f);
     end if;
   end loop;
   return new;
@@ -382,138 +361,3 @@ $$;
 create trigger trg_applications_audit
   after update on applications
   for each row execute function audit_application_changes();
-
-
--- =====================================================================
--- 10. 권한 (RLS)
---
---     여기가 이 시스템 보안의 전부다.
---     "화면에서 안 보여준다"는 방어가 아니다. 브라우저 개발자도구로
---     요청을 직접 쏘면 그만이기 때문이다. 아래 정책은 DB 엔진이
---     직접 강제하므로 우회할 수 없다.
--- =====================================================================
-alter table profiles         enable row level security;
-alter table calls            enable row level security;
-alter table applications     enable row level security;
-alter table kpis             enable row level security;
-alter table activities       enable row level security;
-alter table settlements      enable row level security;
-alter table settlement_items enable row level security;
-alter table files            enable row level security;
-alter table audit_logs       enable row level security;
-
--- profiles: 본인 행만. 관리자는 전체.
-create policy p_profiles_select on profiles for select
-  using (id = auth.uid() or is_admin());
-create policy p_profiles_update on profiles for update
-  using (id = auth.uid() or is_admin())
-  with check (id = auth.uid() or is_admin());
-create policy p_profiles_admin_all on profiles for all
-  using (is_admin()) with check (is_admin());
-
--- 참여자가 스스로를 관리자로 승격시키는 것을 막는다.
--- (RLS만으로는 role 컬럼 변경을 막을 수 없어 트리거로 차단)
-create or replace function guard_profile_role()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  if new.role is distinct from old.role and not is_admin() then
-    raise exception '권한을 변경할 수 없습니다.';
-  end if;
-  return new;
-end;
-$$;
-create trigger trg_profiles_guard_role before update on profiles
-  for each row execute function guard_profile_role();
-
--- calls: 로그인 사용자는 모집중인 공모를 조회.
--- 이미 신청한 공모는 마감된 뒤에도 계속 볼 수 있어야 한다.
--- (이 조건이 없으면 마감 후 "내 신청 내역"에서 사업명이 사라진다)
-create policy p_calls_select on calls for select
-  using (
-    status = 'open'
-    or is_admin()
-    or exists (select 1 from applications a
-               where a.call_id = calls.id and a.account_id = auth.uid())
-  );
-create policy p_calls_admin_all on calls for all
-  using (is_admin()) with check (is_admin());
-
--- applications: 참여자는 본인 것만. 수정은 심사 시작 전('applied')까지만.
-create policy p_apps_select on applications for select
-  using (account_id = auth.uid() or is_admin());
-create policy p_apps_insert on applications for insert
-  with check (account_id = auth.uid());
-create policy p_apps_update_own on applications for update
-  using (account_id = auth.uid() and stage = 'applied')
-  with check (account_id = auth.uid() and stage = 'applied');
-create policy p_apps_admin_all on applications for all
-  using (is_admin()) with check (is_admin());
-
--- kpis / activities / settlements: 참여자는 읽기만, 쓰기는 관리자만.
-create policy p_kpis_select on kpis for select
-  using (exists (select 1 from applications a
-                 where a.id = application_id and (a.account_id = auth.uid() or is_admin())));
-create policy p_kpis_admin_all on kpis for all
-  using (is_admin()) with check (is_admin());
-
-create policy p_acts_select on activities for select using (is_admin());
-create policy p_acts_admin_all on activities for all
-  using (is_admin()) with check (is_admin());
-
-create policy p_settle_select on settlements for select
-  using (exists (select 1 from applications a
-                 where a.id = application_id and (a.account_id = auth.uid() or is_admin())));
-create policy p_settle_admin_all on settlements for all
-  using (is_admin()) with check (is_admin());
-
-create policy p_settleitem_select on settlement_items for select
-  using (exists (select 1 from settlements s join applications a on a.id = s.application_id
-                 where s.id = settlement_id and (a.account_id = auth.uid() or is_admin())));
-create policy p_settleitem_admin_all on settlement_items for all
-  using (is_admin()) with check (is_admin());
-
--- files: 소유자 또는 관리자.
-create policy p_files_select on files for select
-  using (owner_account_id = auth.uid() or is_admin());
-create policy p_files_insert on files for insert
-  with check (owner_account_id = auth.uid() or is_admin());
-create policy p_files_delete on files for delete
-  using (owner_account_id = auth.uid() or is_admin());
-create policy p_files_admin_all on files for all
-  using (is_admin()) with check (is_admin());
-
--- audit_logs: 관리자만 조회. 아무도 직접 쓰지 못한다(트리거만 기록).
-create policy p_audit_select on audit_logs for select using (is_admin());
-
-
--- =====================================================================
--- 11. 파일 저장소 (Storage)
---     테이블 RLS와 버킷 정책은 별개다. 버킷 정책을 빠뜨리면
---     경로를 아는 사람이 첨부파일을 전부 받아갈 수 있다.
--- =====================================================================
-insert into storage.buckets (id, name, public)
-values ('attachments', 'attachments', false)   -- 신청 첨부·결과 파일 (비공개)
-on conflict (id) do nothing;
-
-insert into storage.buckets (id, name, public)
-values ('call-images', 'call-images', true)    -- 공모 대표 이미지 (공개 읽기)
-on conflict (id) do nothing;
-
--- attachments: 경로 규칙 {account_id}/{application_id}/{파일명}
--- 경로 첫 칸이 본인 uid와 같아야 접근 가능.
-create policy s_attach_read on storage.objects for select
-  using (bucket_id = 'attachments'
-         and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
-create policy s_attach_write on storage.objects for insert
-  with check (bucket_id = 'attachments'
-              and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
-create policy s_attach_delete on storage.objects for delete
-  using (bucket_id = 'attachments'
-         and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
-
--- call-images: 누구나 읽기, 관리자만 쓰기.
-create policy s_callimg_read on storage.objects for select
-  using (bucket_id = 'call-images');
-create policy s_callimg_write on storage.objects for all
-  using (bucket_id = 'call-images' and public.is_admin())
-  with check (bucket_id = 'call-images' and public.is_admin());

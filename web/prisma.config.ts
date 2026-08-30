@@ -26,8 +26,11 @@ export default defineConfig({
     // 접속이 필요 없으므로 process.env로 느슨하게 읽고, 진짜로 연결이 필요한
     // migrate/db push/db seed는 이 자리표시자로 접속을 시도하다 자연스럽게(그리고
     // 이해하기 쉬운 메시지로) 실패하게 둡니다.
+    // DIRECT_URL을 안 만들었으면 Vercel Neon 연동이 자동으로 만드는
+    // <prefix>_URL_UNPOOLED로 대신 접속한다 (직접 연결이라는 점은 동일).
     url:
       process.env.DIRECT_URL ||
+      process.env.DATABASE_URL_UNPOOLED ||
       'postgresql://placeholder:placeholder@localhost:5432/placeholder',
   },
 })

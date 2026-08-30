@@ -6,7 +6,7 @@
  */
 import { notFound, redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
-import { getAccount, getCall } from '@/lib/mock-data'
+import { getAccount, getCall } from '@/lib/data'
 import { ApplyForm } from '@/components/apply-form'
 import { PageTitle } from '@/components/ui'
 
@@ -17,8 +17,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ callId: 
   // 로그인 후 이 신청서로 그대로 돌아오게 합니다
   if (!session) redirect(`/login?error=required&next=${encodeURIComponent(`/apply/${callId}`)}`)
 
-  const call = getCall(callId)
-  const account = getAccount(session.accountId)
+  const [call, account] = await Promise.all([getCall(callId), getAccount(session.accountId)])
 
   if (!call || !account) notFound()
 

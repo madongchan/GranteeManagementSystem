@@ -1,16 +1,21 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getAccount, getApplications, getCall } from '@/lib/mock-data'
+import { getAccount, getCalls, getMyApplications } from '@/lib/data'
 import { MemberEditForm } from '@/components/member-edit-form'
 import { PageTitle, Panel } from '@/components/ui'
 import { stageLabel } from '@/lib/domain/stage'
 
+// 여러 명이 동시에 쓰는 실데이터라 매 요청마다 새로 읽습니다 (정적 캐싱 금지).
+export const dynamic = 'force-dynamic'
+
 export default async function MemberEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const account = getAccount(id)
+  const [account, myApps, calls] = await Promise.all([
+    getAccount(id),
+    getMyApplications(id),
+    getCalls(),
+  ])
   if (!account) notFound()
-
-  const myApps = getApplications().filter((a) => a.accountId === id)
 
   return (
     <>
@@ -33,7 +38,9 @@ export default async function MemberEditPage({ params }: { params: Promise<{ id:
                   href={`/applications/${a.id}`}
                   className="flex flex-wrap items-center gap-2 py-2.5 hover:text-accent"
                 >
-                  <span className="text-[13.5px] flex-1">{getCall(a.callId)?.title ?? '—'}</span>
+                  <span className="text-[13.5px] flex-1">
+                    {calls.find((c) => c.id === a.callId)?.title ?? '—'}
+                  </span>
                   <span className="text-[12.5px] text-muted">{stageLabel(a.stage)}</span>
                   <span className="text-[12.5px] text-faint">{a.createdAt}</span>
                 </Link>
