@@ -43,17 +43,22 @@ export function isGoogleConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 }
 
+/** 카카오에서 발급받은 키가 준비돼 있는지 */
+export function isKakaoConfigured(): boolean {
+  return Boolean(process.env.KAKAO_CLIENT_ID && process.env.KAKAO_CLIENT_SECRET)
+}
+
 /**
  * 체험용 로그인을 쓸 수 있는지.
  *
- * - 구글 키가 없으면: 시연이 막히면 안 되므로 자동으로 켜집니다
- * - 구글 키가 있으면: ALLOW_DEMO_LOGIN=true 를 넣어야만 켜집니다
+ * - 진짜 로그인 수단(구글·카카오)이 하나도 없으면: 시연이 막히면 안 되므로 자동으로 켜집니다
+ * - 하나라도 있으면: ALLOW_DEMO_LOGIN=true 를 넣어야만 켜집니다
  *
- * 실서비스로 넘어갈 때는 ALLOW_DEMO_LOGIN 을 지우세요.
+ * 실제 테스트/서비스로 넘어갈 때는 ALLOW_DEMO_LOGIN 을 지우세요.
  * 남겨두면 아무나 다른 참여자 계정으로 들어갈 수 있습니다.
  */
 export function isDemoLoginAllowed(): boolean {
-  if (!isGoogleConfigured()) return true
+  if (!isGoogleConfigured() && !isKakaoConfigured()) return true
   return process.env.ALLOW_DEMO_LOGIN === 'true'
 }
 
@@ -183,5 +188,66 @@ export async function exchangeCode(
     name: payload.name ?? '이름 없음',
     email: payload.email ?? '',
     picture: payload.picture,
+  }
+}
+
+// ---------------------------------------------------------------------
+// 카카오 로그인 — 구글과 흐름이 똑같습니다. 주소와 응답 모양만 다릅니다.
+//   시작   → /api/auth/kakao
+//   돌아옴 → /api/auth/callback/kakao
+// ---------------------------------------------------------------------
+
+/** 카카오가 돌아올 주소 */
+export function kakaoCallbackUrl(origin: string): string {
+  return `${origin}/api/auth/callback/kakao`
+}
+
+export function kakaoAuthUrl(origin: string, state: string): string {
+  const params = new URLSearchParams({
+    client_id: process.env.KAKAO_CLIENT_ID!,
+    redirect_uri: kakaoCallbackUrl(origin),
+    response_type: 'code',
+    state,
+  })
+  return `https://kauth.kakao.com/oauth/authorize?${params}`
+}
+
+/** 카카오가 준 코드를 사용자 정보로 바꿉니다 */
+export async function exchangeKakaoCode(
+  code: string,
+  origin: string,
+): Promise<{ sub: string; name: string; email: string }> {
+  const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: process.env.KAKAO_CLIENT_ID!,
+      client_secret: process.env.KAKAO_CLIENT_SECRET!,
+      redirect_uri: kakaoCallbackUrl(origin),
+      code,
+    }),
+  })
+  if (!tokenRes.ok) throw new Error(`카카오 토큰 교환 실패 (${tokenRes.status})`)
+
+  const token = (await tokenRes.json()) as { access_token?: string }
+  if (!token.access_token) throw new Error('카카오 응답에 access_token 이 없습니다')
+
+  const meRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+    headers: { Authorization: `Bearer ${token.access_token}` },
+  })
+  if (!meRes.ok) throw new Error(`카카오 사용자 조회 실패 (${meRes.status})`)
+
+  const me = (await meRes.json()) as {
+    id: number
+    kakao_account?: { profile?: { nickname?: string }; email?: string }
+    properties?: { nickname?: string }
+  }
+
+  return {
+    // 카카오의 회원 번호는 숫자라 문자열로 바꿔 세션 sub 에 담습니다.
+    sub: String(me.id),
+    name: me.kakao_account?.profile?.nickname ?? me.properties?.nickname ?? '이름 없음',
+    email: me.kakao_account?.email ?? '',
   }
 }

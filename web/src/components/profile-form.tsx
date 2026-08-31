@@ -1,43 +1,35 @@
 'use client'
 
 /**
- * 참여자 정보 수정 (관리자용)
+ * 기관·개인 정보 입력 폼 (첫 로그인 & 내 정보 수정)
  *
- * 저장하면 서버(Server Action)로 가서 DB 에 반영되고 화면이 새로고침됩니다.
+ * 예전 프로토타입 폼과 달리 입력값이 서버(Server Action)로 가서 DB 에 저장됩니다.
+ * 저장이 끝나면 원래 가려던 화면으로 돌아갑니다.
  */
-import { useActionState, useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useActionState, useState } from 'react'
+import { saveProfile, type FormResult } from '@/lib/actions'
 import type { Account } from '@/lib/types'
 import { Panel } from '@/components/ui'
-import { saveMember, type FormResult } from '@/lib/actions'
 import { AGE_BANDS, KINDS, SCALE_BANDS, SECTORS, SIDO, typesFor } from '@/lib/taxonomy'
 
-const CONSENT_ITEMS = [
-  { key: 'collect', label: '개인정보 수집·이용' },
-  { key: 'thirdParty', label: '제3자 제공' },
-  { key: 'research', label: '연구·정책개선 활용' },
-  { key: 'followup', label: '후속지원 안내 수신' },
-  { key: 'survey', label: '조사 참여' },
+const CONSENTS = [
+  { key: 'collect', label: '개인정보 수집·이용', required: true },
+  { key: 'thirdParty', label: '제3자 제공', required: false },
+  { key: 'research', label: '연구·정책개선 목적 활용', required: false },
+  { key: 'followup', label: '후속지원 프로그램 안내 수신', required: false },
+  { key: 'survey', label: '만족도·성과추적 조사 참여', required: false },
 ] as const
 
-const initial: FormResult = { ok: false }
-const inputCls =
-  'w-full border border-line rounded-[7px] px-3 py-2 text-[13.5px] bg-surface focus:outline-none focus:border-accent'
+const initial: FormResult = { ok: true }
 
-export function MemberEditForm({ account }: { account: Account }) {
-  const router = useRouter()
-  const [state, action, pending] = useActionState(saveMember, initial)
+export function ProfileForm({ account, next }: { account: Account; next: string }) {
+  const [state, action, pending] = useActionState(saveProfile, initial)
   const [kind, setKind] = useState<Account['kind']>(account.kind)
   const isIndividual = kind === 'individual'
 
-  useEffect(() => {
-    if (state.ok) router.refresh()
-  }, [state, router])
-
   return (
     <form action={action}>
-      <input type="hidden" name="id" value={account.id} />
+      <input type="hidden" name="next" value={next} />
 
       <Panel title="기본 정보">
         <div className="grid sm:grid-cols-2 gap-x-5">
@@ -47,7 +39,7 @@ export function MemberEditForm({ account }: { account: Account }) {
               name="kind"
               value={kind}
               onChange={(e) => setKind(e.target.value as Account['kind'])}
-              className={inputCls}
+              className="w-full border border-line rounded-[7px] px-3 py-2 text-[13.5px] bg-surface focus:outline-none focus:border-accent"
             >
               {KINDS.map((k) => (
                 <option key={k.key} value={k.key}>
@@ -56,6 +48,8 @@ export function MemberEditForm({ account }: { account: Account }) {
               ))}
             </select>
           </label>
+
+          {/* key={kind} 로 구분이 바뀌면 유형 목록을 새로 그립니다 */}
           <Select
             key={kind}
             label="세부 유형"
@@ -82,7 +76,6 @@ export function MemberEditForm({ account }: { account: Account }) {
             type="date"
             defaultValue={account.birthDate}
           />
-          <Text label="이메일" name="email" type="email" defaultValue={account.email} />
           <Text label="연락처" name="contact" defaultValue={account.contact} />
           <Text
             label={isIndividual ? '소속' : '대표자'}
@@ -108,11 +101,8 @@ export function MemberEditForm({ account }: { account: Account }) {
       </Panel>
 
       <Panel title="개인정보 동의">
-        <p className="text-[12.5px] text-muted mb-3">
-          참여자가 직접 철회를 요청한 경우에만 해제하세요.
-        </p>
         <div className="border border-line rounded-[7px] divide-y divide-line">
-          {CONSENT_ITEMS.map((c) => (
+          {CONSENTS.map((c) => (
             <label key={c.key} className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer">
               <input
                 type="checkbox"
@@ -121,6 +111,11 @@ export function MemberEditForm({ account }: { account: Account }) {
                 className="accent-[#1d7a5f] w-4 h-4"
               />
               <span className="text-[13.5px]">{c.label}</span>
+              <span
+                className={`text-[11.5px] ml-auto ${c.required ? 'text-[#a32d2d]' : 'text-faint'}`}
+              >
+                {c.required ? '필수' : '선택'}
+              </span>
             </label>
           ))}
         </div>
@@ -132,25 +127,18 @@ export function MemberEditForm({ account }: { account: Account }) {
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="bg-accent text-white rounded-[7px] px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50"
-        >
-          {pending ? '저장 중…' : '저장'}
-        </button>
-        <Link
-          href="/members"
-          className="border border-line rounded-[7px] px-5 py-2.5 text-sm bg-surface hover:border-line2"
-        >
-          목록
-        </Link>
-        {state.ok && <span className="text-[13px] text-accent">저장했습니다.</span>}
-      </div>
+      <button
+        type="submit"
+        disabled={pending}
+        className="bg-accent text-white rounded-[7px] px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+      >
+        {pending ? '저장 중…' : '저장하고 계속'}
+      </button>
     </form>
   )
 }
+
+// ── 작은 입력 부품들 ──────────────────────────────────────────────
 
 function Text({
   label,
@@ -166,7 +154,12 @@ function Text({
   return (
     <label className="block mb-3.5">
       <span className="block text-[12.5px] text-muted mb-1.5">{label}</span>
-      <input type={type} name={name} defaultValue={defaultValue} className={inputCls} />
+      <input
+        type={type}
+        name={name}
+        defaultValue={defaultValue}
+        className="w-full border border-line rounded-[7px] px-3 py-2 text-[13.5px] focus:outline-none focus:border-accent"
+      />
     </label>
   )
 }
@@ -187,7 +180,11 @@ function Select({
   return (
     <label className="block mb-3.5">
       <span className="block text-[12.5px] text-muted mb-1.5">{label}</span>
-      <select name={name} defaultValue={defaultValue} className={inputCls}>
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        className="w-full border border-line rounded-[7px] px-3 py-2 text-[13.5px] bg-surface focus:outline-none focus:border-accent"
+      >
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((o) => (
           <option key={o.value} value={o.value}>

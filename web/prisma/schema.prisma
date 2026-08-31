@@ -45,6 +45,9 @@ model Account {
   consents    Json // Consents (collect/thirdParty/research/followup/survey/agreedAt)
   createdAt   String
 
+  /// 로그인 신원 연결. "google:<sub>" 또는 "kakao:<id>". 체험용/시드 계정은 null.
+  authKey String? @unique
+
   applications Application[]
 
   @@index([email])

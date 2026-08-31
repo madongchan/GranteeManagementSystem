@@ -21,6 +21,11 @@ export default async function ApplyPage({ params }: { params: Promise<{ callId: 
 
   if (!call || !account) notFound()
 
+  // 회원 정보가 덜 찼으면 먼저 입력 화면으로 (끝나면 이 신청서로 돌아옵니다)
+  if (!account.consents.collect || !account.type) {
+    redirect(`/onboarding?next=${encodeURIComponent(`/apply/${callId}`)}`)
+  }
+
   return (
     <div className="max-w-[860px] mx-auto px-6 py-14">
       <PageTitle title={call.title} sub={call.description} />

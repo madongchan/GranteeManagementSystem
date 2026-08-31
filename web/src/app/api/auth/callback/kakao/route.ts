@@ -1,14 +1,14 @@
 /**
- * 구글에서 돌아왔을 때 — 코드를 사용자 정보로 바꾸고, 우리 회원과 연결하고, 세션을 만듭니다.
+ * 카카오에서 돌아왔을 때 — 코드를 사용자 정보로 바꾸고, 우리 회원과 연결하고, 세션을 만듭니다.
+ * (구글 콜백과 동일한 구조)
  */
 import { NextResponse, type NextRequest } from 'next/server'
-import { exchangeCode, setSession } from '@/lib/auth'
+import { exchangeKakaoCode, setSession } from '@/lib/auth'
 import { resolveLoginAccount } from '@/lib/auth-db'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
 
-  // 사용자가 구글 화면에서 취소한 경우
   if (searchParams.get('error')) {
     return NextResponse.redirect(new URL('/login?error=cancelled', request.url))
   }
@@ -17,17 +17,15 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state')
   const savedState = request.cookies.get('oauth_state')?.value
 
-  // 보낼 때 만들어둔 값과 다르면 우리가 시작한 로그인이 아닙니다
   if (!code || !state || state !== savedState) {
     return NextResponse.redirect(new URL('/login?error=state', request.url))
   }
 
   try {
-    const profile = await exchangeCode(code, origin)
+    const profile = await exchangeKakaoCode(code, origin)
 
-    // 이 구글 계정이 우리 DB의 누구인지 정합니다 (없으면 새로 만듭니다)
     const { accountId, needsProfile } = await resolveLoginAccount({
-      provider: 'google',
+      provider: 'kakao',
       providerId: profile.sub,
       name: profile.name,
       email: profile.email,
@@ -37,11 +35,9 @@ export async function GET(request: NextRequest) {
       sub: profile.sub,
       name: profile.name,
       email: profile.email,
-      picture: profile.picture,
       accountId,
     })
 
-    // 로그인 전에 보려던 곳. 새 회원이거나 정보가 덜 찼으면 먼저 정보 입력 화면으로.
     const savedNext = request.cookies.get('oauth_next')?.value ?? '/'
     const dest = needsProfile
       ? `/onboarding?next=${encodeURIComponent(savedNext)}`
@@ -52,7 +48,7 @@ export async function GET(request: NextRequest) {
     response.cookies.delete('oauth_next')
     return response
   } catch (error) {
-    console.error('구글 로그인 실패:', error)
+    console.error('카카오 로그인 실패:', error)
     return NextResponse.redirect(new URL('/login?error=failed', request.url))
   }
 }

@@ -6,16 +6,21 @@
  */
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getSession, isDemoLoginAllowed, isGoogleConfigured } from '@/lib/auth'
+import {
+  getSession,
+  isDemoLoginAllowed,
+  isGoogleConfigured,
+  isKakaoConfigured,
+} from '@/lib/auth'
 import { ACCOUNTS } from '@/lib/mock-data'
 import { kindLabel } from '@/lib/taxonomy'
 
 const ERROR_MESSAGE: Record<string, string> = {
-  'not-configured': '구글 로그인이 아직 설정되지 않았습니다.',
+  'not-configured': '이 로그인 방식은 아직 설정되지 않았습니다.',
   cancelled: '로그인을 취소했습니다.',
   state: '로그인 요청이 만료되었습니다. 다시 시도해 주세요.',
   failed: '로그인 중 문제가 생겼습니다. 다시 시도해 주세요.',
-  'demo-disabled': '구글 로그인이 준비되어 체험용 로그인은 사용할 수 없습니다.',
+  'demo-disabled': '소셜 로그인이 준비되어 체험용 로그인은 사용할 수 없습니다.',
   required: '로그인이 필요한 화면입니다.',
 }
 
@@ -31,7 +36,8 @@ export default async function LoginPage({
 
   // 이미 로그인했으면 원래 가려던 곳으로
   if (await getSession()) redirect(back)
-  const configured = isGoogleConfigured()
+  const googleConfigured = isGoogleConfigured()
+  const kakaoConfigured = isKakaoConfigured()
   const demoAllowed = isDemoLoginAllowed()
 
   return (
@@ -54,16 +60,27 @@ export default async function LoginPage({
         <a
           href={`/api/auth/google?next=${encodeURIComponent(back)}`}
           className={`flex items-center justify-center gap-2.5 w-full border border-line rounded-[7px] py-3 text-sm font-medium bg-white transition-colors ${
-            configured ? 'hover:border-line2' : 'opacity-45 pointer-events-none'
+            googleConfigured ? 'hover:border-line2' : 'opacity-45 pointer-events-none'
           }`}
         >
           <GoogleMark />
           구글 계정으로 로그인
         </a>
 
-        {!configured && (
+        {/* 카카오 로그인 */}
+        <a
+          href={`/api/auth/kakao?next=${encodeURIComponent(back)}`}
+          className={`mt-2.5 flex items-center justify-center gap-2 w-full rounded-[7px] py-3 text-sm font-medium bg-[#FEE500] text-[#191600] transition-opacity ${
+            kakaoConfigured ? 'hover:opacity-90' : 'opacity-45 pointer-events-none'
+          }`}
+        >
+          <KakaoMark />
+          카카오 계정으로 로그인
+        </a>
+
+        {!googleConfigured && !kakaoConfigured && (
           <p className="text-[12.5px] text-faint text-center mt-3 leading-relaxed">
-            구글 로그인은 아직 준비 중입니다.
+            소셜 로그인이 아직 준비 중입니다.
             <br />
             아래 체험용 로그인으로 화면을 둘러보실 수 있습니다.
           </p>
@@ -110,6 +127,18 @@ export default async function LoginPage({
         </Link>
       </p>
     </div>
+  )
+}
+
+/** 카카오 말풍선 로고 */
+function KakaoMark() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#191600"
+        d="M12 3.5C6.9 3.5 3 6.7 3 10.6c0 2.5 1.7 4.7 4.2 6-.2.6-.6 2.3-.7 2.7-.1.5.2.5.4.4.2-.1 2.5-1.7 3.5-2.4.5.1 1.1.1 1.6.1 5.1 0 9-3.2 9-7.3S17.1 3.5 12 3.5z"
+      />
+    </svg>
   )
 }
 
