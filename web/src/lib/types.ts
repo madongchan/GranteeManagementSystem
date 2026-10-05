@@ -56,6 +56,8 @@ export interface Account {
   sigungu?: string
   ageBand?: string       // 개인: 연령대
   scaleBand?: string     // 기관·기업: 규모
+  regNoKind?: string     // 기관·기업: '사업자등록번호' | '고유번호'
+  regNo?: string
   consents: Consents
   createdAt: string      // 가입일
 }

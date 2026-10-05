@@ -33,7 +33,7 @@ function toCall(r: CallRow): Call {
   }
 }
 
-function toAccount(r: AccountRow): Account {
+export function toAccount(r: AccountRow): Account {
   return {
     id: r.id,
     kind: r.kind as Account['kind'],
@@ -49,6 +49,8 @@ function toAccount(r: AccountRow): Account {
     sigungu: r.sigungu ?? undefined,
     ageBand: r.ageBand ?? undefined,
     scaleBand: r.scaleBand ?? undefined,
+    regNoKind: r.regNoKind ?? undefined,
+    regNo: r.regNo ?? undefined,
     consents: j<Account['consents']>(r.consents),
     createdAt: r.createdAt,
   }

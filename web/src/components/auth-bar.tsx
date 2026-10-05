@@ -15,7 +15,7 @@ export async function AuthBar() {
     <div className="border-b border-line bg-surface">
       <div className="max-w-[1180px] mx-auto px-6 h-11 flex items-center gap-4 text-[12.5px]">
         <Link href="/" className="text-text hover:text-accent transition-colors font-medium">
-          사업 공모
+          Home
         </Link>
 
         <div className="ml-auto flex items-center gap-4">
@@ -23,6 +23,9 @@ export async function AuthBar() {
             <>
               <Link href="/my" className="text-text hover:text-accent transition-colors">
                 내 신청 내역
+              </Link>
+              <Link href="/profile" className="text-text hover:text-accent transition-colors">
+                내 정보
               </Link>
               <span className="text-muted">
                 <strong className="font-medium text-text">{session.name}</strong> 님

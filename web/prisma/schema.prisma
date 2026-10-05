@@ -42,7 +42,9 @@ model Account {
   sigungu     String?
   ageBand     String?
   scaleBand   String?
-  consents    Json // Consents (collect/thirdParty/research/followup/survey/agreedAt)
+  regNoKind   String? // '사업자등록번호' | '고유번호' (기관·기업만)
+  regNo       String?
+  consents   Json // Consents (collect/thirdParty/research/followup/survey/agreedAt)
   createdAt   String
 
   /// 로그인 신원 연결. "google:<sub>" 또는 "kakao:<id>". 체험용/시드 계정은 null.

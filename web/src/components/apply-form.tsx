@@ -12,15 +12,8 @@ import Link from 'next/link'
 import { submitApplication, type FormResult } from '@/lib/actions'
 import type { Account, Call } from '@/lib/types'
 import { Panel } from '@/components/ui'
+import { ConsentList } from '@/components/consent-list'
 import { formatMoney, parseMoney } from '@/lib/domain/settlement'
-
-const CONSENTS = [
-  { key: 'collect', label: '개인정보 수집·이용', required: true },
-  { key: 'thirdParty', label: '제3자 제공', required: false },
-  { key: 'research', label: '연구·정책개선 목적 활용', required: false },
-  { key: 'followup', label: '후속지원 프로그램 안내 수신', required: false },
-  { key: 'survey', label: '만족도·성과추적 조사 참여', required: false },
-] as const
 
 const initial: FormResult = { ok: true }
 
@@ -47,6 +40,7 @@ export function ApplyForm({ call, account }: { call: Call; account: Account }) {
           <Row label="이메일" value={account.email} />
           <Row label="연락처" value={account.contact} />
           <Row label="지역" value={[account.sido, account.sigungu].filter(Boolean).join(' ')} />
+          {account.regNo && <Row label={account.regNoKind ?? '등록번호'} value={account.regNo} />}
         </dl>
       </Panel>
 
@@ -94,24 +88,7 @@ export function ApplyForm({ call, account }: { call: Call; account: Account }) {
       </Panel>
 
       <Panel title="개인정보 동의">
-        <div className="border border-line rounded-[7px] divide-y divide-line">
-          {CONSENTS.map((c) => (
-            <label key={c.key} className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                name={c.key}
-                defaultChecked={account.consents[c.key] === true}
-                className="accent-[#1d7a5f] w-4 h-4"
-              />
-              <span className="text-[13.5px]">{c.label}</span>
-              <span
-                className={`text-[11.5px] ml-auto ${c.required ? 'text-[#a32d2d]' : 'text-faint'}`}
-              >
-                {c.required ? '필수' : '선택'}
-              </span>
-            </label>
-          ))}
-        </div>
+        <ConsentList consents={account.consents} />
       </Panel>
 
       {state.error && (

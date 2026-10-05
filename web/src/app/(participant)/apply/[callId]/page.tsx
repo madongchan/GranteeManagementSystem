@@ -7,6 +7,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { getAccount, getCall } from '@/lib/data'
+import { isProfileComplete } from '@/lib/profile'
 import { ApplyForm } from '@/components/apply-form'
 import { PageTitle } from '@/components/ui'
 
@@ -22,7 +23,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ callId: 
   if (!call || !account) notFound()
 
   // 회원 정보가 덜 찼으면 먼저 입력 화면으로 (끝나면 이 신청서로 돌아옵니다)
-  if (!account.consents.collect || !account.type) {
+  if (!isProfileComplete(account)) {
     redirect(`/onboarding?next=${encodeURIComponent(`/apply/${callId}`)}`)
   }
 

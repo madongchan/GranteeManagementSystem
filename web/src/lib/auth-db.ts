@@ -9,6 +9,8 @@
  */
 import crypto from 'node:crypto'
 import { prisma } from '@/lib/prisma'
+import { toAccount } from '@/lib/data'
+import { isProfileComplete } from '@/lib/profile'
 import type { Prisma } from '@/generated/prisma/client'
 import type { Consents } from '@/lib/types'
 
@@ -21,11 +23,8 @@ const emptyConsents = (): Consents => ({
   agreedAt: '',
 })
 
-/** 신청·활동을 하려면 최소한 필수 동의 + 세부 유형이 채워져 있어야 합니다. */
-function needsProfile(row: { consents: Prisma.JsonValue; type: string }): boolean {
-  const c = row.consents as unknown as Consents | null
-  return !c?.collect || row.type.trim() === ''
-}
+/** 기본 정보가 하나라도 비어 있으면 정보 입력 화면으로 보냅니다. */
+const needsProfile = (row: Parameters<typeof toAccount>[0]) => !isProfileComplete(toAccount(row))
 
 export async function resolveLoginAccount(params: {
   provider: 'google' | 'kakao'

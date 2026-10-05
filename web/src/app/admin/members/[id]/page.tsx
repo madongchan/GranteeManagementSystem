@@ -23,7 +23,9 @@ export default async function MemberEditPage({ params }: { params: Promise<{ id:
         ← 참여자 정보
       </Link>
 
-      <PageTitle title={account.name} sub={`가입일 ${account.createdAt}`} />
+      <PageTitle title={account.name} 
+        sub={`가입일 ${account.createdAt}${account.regNo ? ` · ${account.regNoKind} ${account.regNo}` : ''}`}
+      />
 
       <MemberEditForm account={account} />
 

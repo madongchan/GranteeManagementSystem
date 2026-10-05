@@ -13,11 +13,21 @@ import crypto from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { clearSession, getSession } from '@/lib/auth'
+import { ADMIN_COOKIE, adminToken, checkAdminLogin, isAdminToken } from '@/lib/admin-auth'
 import { getAccount } from '@/lib/data'
 import type { Prisma } from '@/generated/prisma/client'
-import type { Consents } from '@/lib/types'
-import { KINDS, SECTORS } from '@/lib/taxonomy'
+import type { Consents, Kind } from '@/lib/types'
+import { AGE_BANDS, KINDS, SCALE_BANDS, SECTORS, typesFor } from '@/lib/taxonomy'
+import {
+  EMAIL_RE,
+  PHONE_RE,
+  REG_NO_RE,
+  isProfileComplete,
+  isValidSigungu,
+  regNoKindsFor,
+} from '@/lib/profile'
 import { parseMoney } from '@/lib/domain/settlement'
 
 export type FormResult = { ok: boolean; error?: string }
@@ -45,20 +55,50 @@ export async function saveProfile(_prev: FormResult, formData: FormData): Promis
   const session = await getSession()
   if (!session) return { ok: false, error: '로그인이 필요합니다.' }
 
-  const kind = str(formData, 'kind')
+  const kind = str(formData, 'kind') as Kind
   const name = str(formData, 'name')
   const type = str(formData, 'type')
+  const sector = str(formData, 'sector')
+  const birthDate = str(formData, 'birthDate')
+  const email = str(formData, 'email')
+  const contact = str(formData, 'contact')
+  const sido = str(formData, 'sido')
+  const sigungu = str(formData, 'sigungu')
   const extra = str(formData, 'extra') // 개인=소속 / 기관·기업=대표자
   const band = str(formData, 'band') // 개인=연령대 / 기관·기업=규모
+  const regNoKind = str(formData, 'regNoKind')
+  const regNo = str(formData, 'regNo')
 
-  if (!KINDS.some((k) => k.key === kind)) return { ok: false, error: '구분을 선택해 주세요.' }
+  // 기본 정보는 하나라도 비거나 형식이 틀리면 저장하지 않습니다.
+  if (!KIND_KEYS.has(kind)) return { ok: false, error: '구분을 선택해 주세요.' }
+  const isIndividual = kind === 'individual'
+  if (!typesFor(kind).includes(type)) return { ok: false, error: '세부 유형을 선택해 주세요.' }
   if (!name) return { ok: false, error: '이름(기관·기업명)을 입력해 주세요.' }
-  if (!type) return { ok: false, error: '세부 유형을 선택해 주세요.' }
+  if (!SECTOR_SET.has(sector)) return { ok: false, error: '사업 분야를 선택해 주세요.' }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+    return { ok: false, error: `${isIndividual ? '생년월일' : '설립일'}을 입력해 주세요.` }
+  }
+  if (!EMAIL_RE.test(email)) return { ok: false, error: '이메일 주소를 정확히 입력해 주세요.' }
+  if (!PHONE_RE.test(contact)) {
+    return { ok: false, error: '연락처를 010-1234-5678 형식으로 입력해 주세요.' }
+  }
+  if (!extra) return { ok: false, error: `${isIndividual ? '소속' : '대표자'}을(를) 입력해 주세요.` }
+  if (!isIndividual && (!regNoKindsFor(kind).includes(regNoKind) || !REG_NO_RE.test(regNo))) {
+    return {
+      ok: false,
+      error: '사업자등록번호 또는 고유번호를 123-45-67890 형식(숫자 10자리)으로 입력해 주세요.',
+    }
+  }
+  if (!isValidSigungu(sido, sigungu)) {
+    return { ok: false, error: '시도와 시군구를 목록에서 선택해 주세요.' }
+  }
+  if (!(isIndividual ? AGE_BANDS : SCALE_BANDS).some((b) => b === band)) {
+    return { ok: false, error: `${isIndividual ? '연령대' : '규모'}를 선택해 주세요.` }
+  }
   if (!checked(formData, 'collect')) {
     return { ok: false, error: '필수 항목인 개인정보 수집·이용에 동의해야 합니다.' }
   }
 
-  const isIndividual = kind === 'individual'
   const consents: Consents = {
     collect: true,
     thirdParty: checked(formData, 'thirdParty'),
@@ -74,15 +114,18 @@ export async function saveProfile(_prev: FormResult, formData: FormData): Promis
       kind,
       name,
       type,
-      sector: str(formData, 'sector'),
-      contact: str(formData, 'contact'),
-      birthDate: str(formData, 'birthDate'),
-      sido: str(formData, 'sido') || null,
-      sigungu: str(formData, 'sigungu') || null,
-      affiliation: isIndividual ? extra || null : null,
-      rep: isIndividual ? null : extra || null,
-      ageBand: isIndividual ? band || null : null,
-      scaleBand: isIndividual ? null : band || null,
+      sector,
+      email,
+      contact,
+      birthDate,
+      sido,
+      sigungu,
+      affiliation: isIndividual ? extra : null,
+      rep: isIndividual ? null : extra,
+      ageBand: isIndividual ? band : null,
+      scaleBand: isIndividual ? null : band,
+      regNoKind: isIndividual ? null : regNoKind,
+      regNo: isIndividual ? null : regNo,
       consents: consents as unknown as Prisma.InputJsonValue,
     },
   })
@@ -90,6 +133,88 @@ export async function saveProfile(_prev: FormResult, formData: FormData): Promis
   revalidatePath('/', 'layout')
   redirect(safeInternalPath(formData.get('next')))
 }
+
+/**
+ * 회원 탈퇴.
+ * 신청 이력이 없으면 회원을 지우고, 있으면 개인정보와 로그인 연결만 지웁니다
+ * (이미 낸 신청서는 제출 당시 내용 그대로 재단 기록으로 남습니다).
+ */
+export async function withdrawAccount(): Promise<void> {
+  const session = await getSession()
+  if (!session) redirect('/login?error=required')
+  // 체험용 계정은 시연 데이터라 지우지 않습니다.
+  if (session.sub === 'demo') redirect('/profile?error=demo')
+
+  const id = session.accountId
+  const applications = await prisma.application.count({ where: { accountId: id } })
+  if (applications === 0) {
+    await prisma.account.deleteMany({ where: { id } })
+  } else {
+    await prisma.account.updateMany({
+      where: { id },
+      data: {
+        name: '탈퇴한 회원',
+        type: '',
+        sector: '',
+        email: '',
+        contact: '',
+        birthDate: '',
+        rep: null,
+        affiliation: null,
+        sido: null,
+        sigungu: null,
+        ageBand: null,
+        scaleBand: null,
+        regNoKind: null,
+        regNo: null,
+        consents: j({
+          collect: false,
+          thirdParty: false,
+          research: false,
+          followup: false,
+          survey: false,
+          agreedAt: '',
+        }),
+        authKey: null,
+      },
+    })
+  }
+
+  await clearSession()
+  revalidatePath('/', 'layout')
+  redirect('/')
+}
+
+// ---------------------------------------------------------------------
+// 관리자 로그인 / 로그아웃
+// ---------------------------------------------------------------------
+
+export async function adminLogin(_prev: FormResult, fd: FormData): Promise<FormResult> {
+  if (!checkAdminLogin(str(fd, 'id'), String(fd.get('password') ?? ''))) {
+    return { ok: false, error: '아이디 또는 비밀번호가 올바르지 않습니다.' }
+  }
+  const store = await cookies()
+  store.set(ADMIN_COOKIE, adminToken(), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 8, // 8시간
+  })
+  redirect('/')
+}
+
+export async function adminLogout(): Promise<void> {
+  const store = await cookies()
+  store.delete(ADMIN_COOKIE)
+  redirect('/login')
+}
+
+/** 관리자용 저장 함수는 화면 없이 직접 불릴 수 있으므로 함수마다 다시 확인합니다. */
+async function isAdmin(): Promise<boolean> {
+  return isAdminToken((await cookies()).get(ADMIN_COOKIE)?.value)
+}
+const NOT_ADMIN: FormResult = { ok: false, error: '관리자 로그인이 필요합니다.' }
 
 // ---------------------------------------------------------------------
 // 참여자: 신청서 제출
@@ -163,8 +288,8 @@ export async function submitApplication(
   if (!account) return { ok: false, error: '회원 정보를 찾을 수 없습니다. 다시 로그인해 주세요.' }
   if (!call) return { ok: false, error: '존재하지 않는 공모사업입니다.' }
   if (call.status !== 'open') return { ok: false, error: '이미 마감된 공모사업입니다.' }
-  if (!account.consents.collect || !account.type) {
-    return { ok: false, error: '먼저 내 정보를 입력해 주세요.' }
+  if (!isProfileComplete(account)) {
+    return { ok: false, error: '먼저 내 정보를 모두 입력해 주세요.' }
   }
   if (!motive) return { ok: false, error: '신청 동기를 입력해 주세요.' }
   if (!checked(formData, 'collect')) {
@@ -228,13 +353,14 @@ export async function submitApplication(
 
 // ---------------------------------------------------------------------
 // 관리자: 공모사업 등록 / 수정 / 삭제
-// (관리자 사이트는 설계상 로그인이 없습니다 — 여기서 세션 검사를 하지 않습니다)
+// (관리자 로그인 쿠키가 있어야만 동작합니다)
 // ---------------------------------------------------------------------
 
 const KIND_KEYS = new Set<string>(KINDS.map((k) => k.key))
 const SECTOR_SET = new Set<string>(SECTORS)
 
 export async function saveCall(_prev: FormResult, fd: FormData): Promise<FormResult> {
+  if (!(await isAdmin())) return NOT_ADMIN
   const id = str(fd, 'id')
   const title = str(fd, 'title')
   const startDate = str(fd, 'startDate')
@@ -273,6 +399,7 @@ export async function saveCall(_prev: FormResult, fd: FormData): Promise<FormRes
 }
 
 export async function deleteCall(_prev: FormResult, fd: FormData): Promise<FormResult> {
+  if (!(await isAdmin())) return NOT_ADMIN
   const id = str(fd, 'id')
   const linked = await prisma.application.count({ where: { callId: id } })
   if (linked > 0) {
@@ -291,6 +418,7 @@ export async function deleteCall(_prev: FormResult, fd: FormData): Promise<FormR
 // ---------------------------------------------------------------------
 
 export async function saveMember(_prev: FormResult, fd: FormData): Promise<FormResult> {
+  if (!(await isAdmin())) return NOT_ADMIN
   const id = str(fd, 'id')
   const acc = await prisma.account.findUnique({ where: { id } })
   if (!acc) return { ok: false, error: '회원을 찾을 수 없습니다.' }
@@ -366,6 +494,7 @@ const gradeOrNull = (fd: FormData, key: string) => {
 }
 
 export async function saveApplication(_prev: FormResult, fd: FormData): Promise<FormResult> {
+  if (!(await isAdmin())) return NOT_ADMIN
   const id = str(fd, 'id')
   const app = await prisma.application.findUnique({ where: { id } })
   if (!app) return { ok: false, error: '신청서를 찾을 수 없습니다.' }

@@ -13,6 +13,7 @@
  */
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { adminLogout } from '@/lib/actions'
 
 function Nav({ items }: { items: { href: string; label: string }[] }) {
   const pathname = usePathname()
@@ -61,6 +62,9 @@ export function ParticipantHeader() {
 }
 
 export function AdminHeader() {
+  // 로그인 화면에서는 메뉴를 보여주지 않습니다.
+  if (usePathname() === '/login') return null
+
   return (
     <header className="bg-surface border-b border-line sticky top-0 z-10 print:hidden">
       <div className="max-w-[1080px] mx-auto px-5">
@@ -81,6 +85,11 @@ export function AdminHeader() {
               { href: '/reports', label: '보고서' },
             ]}
           />
+          <form action={adminLogout} className="shrink-0">
+            <button type="submit" className="text-[13px] text-muted hover:text-text">
+              로그아웃
+            </button>
+          </form>
         </div>
       </div>
     </header>
